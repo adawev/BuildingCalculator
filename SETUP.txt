@@ -1,0 +1,42 @@
+========================================
+PostgreSQL Setup - Copy & Paste
+========================================
+
+STEP 1: Edit pg_hba.conf
+-------------------------
+sudo nano /etc/postgresql/16/main/pg_hba.conf
+
+FIND these lines (around line 90-100):
+   local   all             postgres                                peer
+   local   all             all                                     peer
+   host    all             all             127.0.0.1/32            scram-sha-256
+
+CHANGE TO:
+   local   all             postgres                                trust
+   local   all             all                                     trust
+   host    all             all             127.0.0.1/32            trust
+
+SAVE: Ctrl+O, Enter, Ctrl+X
+
+
+STEP 2: Restart PostgreSQL
+---------------------------
+sudo systemctl restart postgresql
+
+
+STEP 3: Create Database
+------------------------
+psql -U postgres -c "CREATE DATABASE heating_calculator;"
+
+
+STEP 4: Run Backend
+--------------------
+cd ~/underfloor-heating-calculator/backend
+java -jar target/heating-calculator-1.0.0.jar
+
+
+✅ DONE!
+Backend: http://localhost:8080/api
+Frontend: http://localhost:3000
+
+========================================
