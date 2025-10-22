@@ -74,6 +74,7 @@ function App() {
         createProject({
           name: 'Default Project',
           status: 'DRAFT',
+          userId: 1, // Use demo user
         })
       );
     }
