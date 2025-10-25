@@ -12,7 +12,6 @@ public class ProjectResponse {
     private Long id;
     private String name;
     private Project.ProjectStatus status;
-    private Long userId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

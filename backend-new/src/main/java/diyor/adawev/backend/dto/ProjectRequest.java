@@ -10,5 +10,4 @@ import lombok.*;
 public class ProjectRequest {
     private String name;
     private Project.ProjectStatus status;
-    private Long userId;
 }

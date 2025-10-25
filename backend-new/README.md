@@ -15,9 +15,13 @@ Spring Boot backend для калькулятора теплого пола.
 # Создать базу данных
 createdb -U postgres heating_calculator
 
-# Запустить миграции
+# Запустить миграции (из папки backend-new)
 cd migrations
 ./run_all.sh
+
+# После успешного выполнения можно удалить папку migrations
+cd ..
+rm -rf migrations
 ```
 
 ### 2. Конфигурация
@@ -43,9 +47,16 @@ API доступен на: http://localhost:8080/api
 - `POST /api/calculations` - Создать расчет
 - `GET /api/calculations/{id}` - Получить расчет
 
-### Materials
+### Materials (13 default materials автоматически добавляются при миграции)
 - `GET /api/materials` - Все материалы
 - `GET /api/materials/{id}` - Один материал
 - `POST /api/materials` - Создать материал
 - `PUT /api/materials/{id}` - Обновить материал
-- `DELETE /api/materials/{id}` - Удалить материал
+- `DELETE /api/materials/{id}` - Удалить материал (soft delete)
+
+### Projects
+- `GET /api/projects` - Все проекты
+- `GET /api/projects/{id}` - Один проект
+- `POST /api/projects` - Создать проект
+- `PUT /api/projects/{id}` - Обновить проект
+- `DELETE /api/projects/{id}` - Удалить проект

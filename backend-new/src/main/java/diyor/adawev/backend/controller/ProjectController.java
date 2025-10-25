@@ -39,13 +39,6 @@ public class ProjectController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ProjectResponse>> getProjectsByUser(@PathVariable Long userId) {
-        log.info("Fetching projects for user: {}", userId);
-        List<ProjectResponse> responses = projectService.getProjectsByUser(userId);
-        return ResponseEntity.ok(responses);
-    }
-
     @GetMapping
     public ResponseEntity<List<ProjectResponse>> getAllProjects() {
         log.info("Fetching all projects");

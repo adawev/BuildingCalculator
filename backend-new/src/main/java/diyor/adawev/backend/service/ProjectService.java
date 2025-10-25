@@ -3,9 +3,7 @@ package diyor.adawev.backend.service;
 import diyor.adawev.backend.dto.ProjectRequest;
 import diyor.adawev.backend.dto.ProjectResponse;
 import diyor.adawev.backend.entity.Project;
-import diyor.adawev.backend.entity.User;
 import diyor.adawev.backend.repository.ProjectRepository;
-import diyor.adawev.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -18,22 +16,12 @@ import java.util.List;
 @Slf4j
 public class ProjectService {
     private final ProjectRepository projectRepository;
-    private final UserRepository userRepository;
 
     @Transactional
     public ProjectResponse createProject(ProjectRequest request) {
-        User user = null;
-
-        // User is optional - only fetch if userId is provided and not null
-        if (request.getUserId() != null && request.getUserId() > 0) {
-            user = userRepository.findById(request.getUserId())
-                    .orElse(null);
-        }
-
         Project project = Project.builder()
                 .name(request.getName())
                 .status(request.getStatus() != null ? request.getStatus() : Project.ProjectStatus.DRAFT)
-                .user(user)
                 .build();
 
         project = projectRepository.save(project);
@@ -66,13 +54,6 @@ public class ProjectService {
         return mapToResponse(project);
     }
 
-    public List<ProjectResponse> getProjectsByUser(Long userId) {
-        return projectRepository.findByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
     public List<ProjectResponse> getAllProjects() {
         return projectRepository.findAll()
                 .stream()
@@ -93,7 +74,6 @@ public class ProjectService {
                 .id(project.getId())
                 .name(project.getName())
                 .status(project.getStatus())
-                .userId(project.getUser() != null ? project.getUser().getId() : null)
                 .createdAt(project.getCreatedAt())
                 .updatedAt(project.getUpdatedAt())
                 .build();
