@@ -37,7 +37,7 @@ export default slice.reducer;
 // Action creators following EduDash pattern
 export const calculateHeating = (data) =>
   apiCall({
-    url: '/calculate',
+    url: '/calculations',
     method: 'post',
     data,
     onSuccess: (responseData) => (dispatch) => {
@@ -50,7 +50,7 @@ export const calculateHeating = (data) =>
 
 export const fetchCalculation = (id) =>
   apiCall({
-    url: `/calculate/${id}`,
+    url: `/calculations/${id}`,
     method: 'get',
     onSuccess: (responseData) => (dispatch) => {
       dispatch(getFromResponse(responseData));
@@ -62,7 +62,7 @@ export const fetchCalculation = (id) =>
 
 export const fetchProjectCalculations = (projectId) =>
   apiCall({
-    url: `/calculate/project/${projectId}`,
+    url: `/calculations/project/${projectId}`,
     method: 'get',
     onSuccess: (responseData) => (dispatch) => {
       dispatch(getFromResponse(responseData));

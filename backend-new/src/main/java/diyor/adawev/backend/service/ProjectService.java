@@ -22,8 +22,13 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse createProject(ProjectRequest request) {
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = null;
+
+        // User is optional - only fetch if userId is provided
+        if (request.getUserId() != null) {
+            user = userRepository.findById(request.getUserId())
+                    .orElse(null);
+        }
 
         Project project = Project.builder()
                 .name(request.getName())
@@ -32,7 +37,7 @@ public class ProjectService {
                 .build();
 
         project = projectRepository.save(project);
-        log.info("Created project: {} for user: {}", project.getName(), user.getUsername());
+        log.info("Created project: {}", project.getName());
 
         return mapToResponse(project);
     }
@@ -88,7 +93,7 @@ public class ProjectService {
                 .id(project.getId())
                 .name(project.getName())
                 .status(project.getStatus())
-                .userId(project.getUser().getId())
+                .userId(project.getUser() != null ? project.getUser().getId() : null)
                 .createdAt(project.getCreatedAt())
                 .updatedAt(project.getUpdatedAt())
                 .build();

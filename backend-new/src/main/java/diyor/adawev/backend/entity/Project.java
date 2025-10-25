@@ -28,7 +28,7 @@ public class Project {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private User user;  // Optional - can be null for unauthenticated usage
 
     @Builder.Default
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL)
