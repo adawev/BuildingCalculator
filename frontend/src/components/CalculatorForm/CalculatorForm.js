@@ -18,7 +18,7 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { calculateHeating } from '../redux/calculationSlice';
+import { calculateHeating } from '../../store/reducers/calculation';
 
 const CalculatorForm = () => {
   const dispatch = useDispatch();

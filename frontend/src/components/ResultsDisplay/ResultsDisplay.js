@@ -18,7 +18,7 @@ import {
   Button,
 } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import { generatePDF } from '../utils/pdfGenerator';
+import { generatePDF } from '../../utils/pdfGenerator';
 
 const ResultsDisplay = () => {
   const { current: calculation } = useSelector((state) => state.calculation);

@@ -6,10 +6,10 @@ import {
   createTheme,
   CssBaseline,
 } from '@mui/material';
-import { createProject } from './redux/projectSlice';
-import LandingPage from './pages/LandingPage';
-import CalculatorPage from './pages/CalculatorPage';
-import MultiRoomCalculator from './pages/MultiRoomCalculator';
+import { createProject } from './store/reducers/project';
+import LandingPage from './pages/LandingPage/LandingPage';
+import CalculatorPage from './pages/CalculatorPage/CalculatorPage';
+import MultiRoomCalculator from './pages/MultiRoomCalculator/MultiRoomCalculator';
 
 function App() {
   const dispatch = useDispatch();

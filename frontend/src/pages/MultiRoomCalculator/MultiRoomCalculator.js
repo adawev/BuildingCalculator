@@ -24,7 +24,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CalculateIcon from '@mui/icons-material/Calculate';
-import { calculateHeating } from '../redux/calculationSlice';
+import { calculateHeating } from '../../store/reducers/calculation';
 
 const MultiRoomCalculator = () => {
   const navigate = useNavigate();

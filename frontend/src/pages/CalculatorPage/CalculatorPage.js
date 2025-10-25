@@ -8,8 +8,8 @@ import {
   Button,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CalculatorForm from '../components/CalculatorForm';
-import ResultsDisplay from '../components/ResultsDisplay';
+import CalculatorForm from '../../components/CalculatorForm/CalculatorForm';
+import ResultsDisplay from '../../components/ResultsDisplay/ResultsDisplay';
 
 const CalculatorPage = () => {
   const navigate = useNavigate();
