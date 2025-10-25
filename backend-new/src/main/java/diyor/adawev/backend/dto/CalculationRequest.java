@@ -14,8 +14,5 @@ public class CalculationRequest {
     private BigDecimal roomWidth;
 
     @Builder.Default
-    private BigDecimal pipeSpacing = new BigDecimal("15");
-
-    @Builder.Default
     private Boolean calculatePrice = false;
 }

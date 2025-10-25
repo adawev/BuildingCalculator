@@ -6,6 +6,7 @@ import diyor.adawev.backend.repository.MaterialRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -33,6 +34,43 @@ public class MaterialService {
         Material material = materialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Material not found"));
         return mapToResponse(material);
+    }
+
+    @Transactional
+    public MaterialResponse createMaterial(Material material) {
+        if (material.getIsAvailable() == null) {
+            material.setIsAvailable(true);
+        }
+        Material saved = materialRepository.save(material);
+        log.info("Material created: {} (ID: {})", saved.getNameUz(), saved.getId());
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public MaterialResponse updateMaterial(Long id, Material material) {
+        Material existing = materialRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Material not found"));
+
+        existing.setNameUz(material.getNameUz());
+        existing.setNameRu(material.getNameRu());
+        existing.setType(material.getType());
+        existing.setUnit(material.getUnit());
+        existing.setPricePerUnit(material.getPricePerUnit());
+        existing.setIsAvailable(material.getIsAvailable());
+
+        Material updated = materialRepository.save(existing);
+        log.info("Material updated: {} (ID: {})", updated.getNameUz(), updated.getId());
+        return mapToResponse(updated);
+    }
+
+    @Transactional
+    public void deleteMaterial(Long id) {
+        Material material = materialRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Material not found"));
+        // Soft delete
+        material.setIsAvailable(false);
+        materialRepository.save(material);
+        log.info("Material deleted: {} (ID: {})", material.getNameUz(), id);
     }
 
     private MaterialResponse mapToResponse(Material material) {

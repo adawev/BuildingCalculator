@@ -26,7 +26,6 @@ public class Calculation {
     private String roomName;
     private BigDecimal roomLength;
     private BigDecimal roomWidth;
-    private BigDecimal pipeSpacing;
     private BigDecimal roomArea;
     private BigDecimal pipeLength;
     private Integer numberOfLoops;

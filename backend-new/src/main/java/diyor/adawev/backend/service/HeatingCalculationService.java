@@ -5,11 +5,9 @@ import diyor.adawev.backend.entity.*;
 import diyor.adawev.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 @Service
@@ -20,47 +18,55 @@ public class HeatingCalculationService {
     private final ProjectRepository projectRepository;
     private final MaterialRepository materialRepository;
 
-    @Value("${calculation.defaults.loop-max-length-m:100}")
-    private Double maxLoopLength;
-
-    @Value("${calculation.defaults.heat-output-per-m2:100}")
-    private Double heatOutputPerM2;
-
     @Transactional
     public CalculationResponse calculate(CalculationRequest request) {
-        // Project is optional - only fetch if projectId is provided and not null
+        log.info("Starting calculation for room: {}", request.getRoomName());
+
+        // Project optional
         Project project = null;
         if (request.getProjectId() != null && request.getProjectId() > 0) {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        BigDecimal roomArea = calculateRoomArea(request.getRoomLength(), request.getRoomWidth());
-        BigDecimal pipeLength = calculatePipeLength(roomArea, request.getPipeSpacing());
-        Integer numberOfLoops = calculateNumberOfLoops(pipeLength);
-        BigDecimal heatOutput = calculateHeatOutput(roomArea);
+        // Input ma'lumotlar:
+        BigDecimal roomLength = request.getRoomLength();
+        BigDecimal roomWidth = request.getRoomWidth();
 
+        // TODO: Sizning hisob-kitoblaringiz
+        BigDecimal roomArea = roomLength.multiply(roomWidth);         // Xona maydoni (m²)
+        BigDecimal pipeLength = roomArea.multiply(new BigDecimal("5"));       // Shlanka uzunligi (m)
+
+        // ==================================================================
+        // BU JOYGA KERAKLI HISOB-KITOBLARNI QOSHING
+        // ==================================================================
+
+        // Calculation entity yaratish
         Calculation calculation = Calculation.builder()
                 .project(project)
                 .roomName(request.getRoomName())
-                .roomLength(request.getRoomLength())
-                .roomWidth(request.getRoomWidth())
-                .pipeSpacing(request.getPipeSpacing())
+                .roomLength(roomLength)
+                .roomWidth(roomWidth)
                 .roomArea(roomArea)
                 .pipeLength(pipeLength)
-                .numberOfLoops(numberOfLoops)
-                .heatOutput(heatOutput)
+                .totalCost(BigDecimal.ZERO)
                 .build();
 
+        // Materiallar hisobi (agar kerak bo'lsa)
         List<MaterialItemResponse> materialItems = new ArrayList<>();
         BigDecimal totalCost = BigDecimal.ZERO;
 
         if (request.getCalculatePrice()) {
+            // Barcha mavjud materiallarni olish
             List<Material> materials = materialRepository.findByIsAvailableTrue();
+
             for (Material material : materials) {
-                BigDecimal quantity = calculateMaterialQuantity(material, roomArea, pipeLength, numberOfLoops);
+                // TODO: Har bir material uchun kerakli miqdorni hisoblang
+                BigDecimal quantity = BigDecimal.ZERO; // Sizning logikangiz
+
                 if (quantity.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal unitPrice = material.getPricePerUnit() != null ? material.getPricePerUnit() : BigDecimal.ZERO;
-                    BigDecimal itemTotal = quantity.multiply(unitPrice).setScale(2, RoundingMode.HALF_UP);
+                    BigDecimal unitPrice = material.getPricePerUnit() != null ?
+                        material.getPricePerUnit() : BigDecimal.ZERO;
+                    BigDecimal itemTotal = quantity.multiply(unitPrice);
 
                     MaterialItem item = MaterialItem.builder()
                             .calculation(calculation)
@@ -89,16 +95,15 @@ public class HeatingCalculationService {
         calculation.setTotalCost(totalCost);
         calculation = calculationRepository.save(calculation);
 
+        log.info("Calculation completed. ID: {}", calculation.getId());
+
         return CalculationResponse.builder()
                 .id(calculation.getId())
                 .roomName(calculation.getRoomName())
-                .roomLength(calculation.getRoomLength())
-                .roomWidth(calculation.getRoomWidth())
-                .pipeSpacing(calculation.getPipeSpacing())
+                .roomLength(roomLength)
+                .roomWidth(roomWidth)
                 .roomArea(roomArea)
                 .pipeLengthWithReserve(pipeLength)
-                .numberOfLoops(numberOfLoops)
-                .heatOutput(heatOutput)
                 .materials(materialItems)
                 .totalCost(totalCost)
                 .build();
@@ -113,35 +118,6 @@ public class HeatingCalculationService {
     public List<CalculationResponse> getCalculationsByProject(Long projectId) {
         return calculationRepository.findByProjectIdOrderByCreatedAtDesc(projectId)
                 .stream().map(this::mapToResponse).toList();
-    }
-
-    private BigDecimal calculateRoomArea(BigDecimal length, BigDecimal width) {
-        return length.multiply(width).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculatePipeLength(BigDecimal area, BigDecimal spacing) {
-        BigDecimal spacingM = spacing.divide(BigDecimal.valueOf(100), 4, RoundingMode.HALF_UP);
-        BigDecimal base = area.divide(spacingM, 2, RoundingMode.HALF_UP);
-        BigDecimal reserve = base.multiply(BigDecimal.valueOf(0.10));
-        return base.add(reserve).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private Integer calculateNumberOfLoops(BigDecimal pipeLength) {
-        return pipeLength.divide(BigDecimal.valueOf(maxLoopLength), 0, RoundingMode.UP).intValue();
-    }
-
-    private BigDecimal calculateHeatOutput(BigDecimal area) {
-        return area.multiply(BigDecimal.valueOf(heatOutputPerM2)).setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculateMaterialQuantity(Material material, BigDecimal area, BigDecimal pipeLength, Integer loops) {
-        return switch (material.getType()) {
-            case PIPE -> pipeLength;
-            case MANIFOLD -> BigDecimal.valueOf(loops);
-            case INSULATION, BASE_MATERIAL -> area;
-            case FITTING, VALVE -> BigDecimal.valueOf(loops * 2);
-            default -> BigDecimal.ZERO;
-        };
     }
 
     private CalculationResponse mapToResponse(Calculation calculation) {
@@ -162,7 +138,6 @@ public class HeatingCalculationService {
                 .roomName(calculation.getRoomName())
                 .roomLength(calculation.getRoomLength())
                 .roomWidth(calculation.getRoomWidth())
-                .pipeSpacing(calculation.getPipeSpacing())
                 .roomArea(calculation.getRoomArea())
                 .pipeLengthWithReserve(calculation.getPipeLength())
                 .numberOfLoops(calculation.getNumberOfLoops())

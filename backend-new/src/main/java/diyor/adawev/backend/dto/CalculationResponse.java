@@ -13,7 +13,6 @@ public class CalculationResponse {
     private String roomName;
     private BigDecimal roomLength;
     private BigDecimal roomWidth;
-    private BigDecimal pipeSpacing;
     private BigDecimal roomArea;
     private BigDecimal pipeLengthWithReserve;
     private Integer numberOfLoops;
