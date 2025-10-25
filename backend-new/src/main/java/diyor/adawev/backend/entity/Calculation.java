@@ -28,9 +28,6 @@ public class Calculation {
     private BigDecimal roomWidth;
     private BigDecimal roomArea;
     private BigDecimal pipeLength;
-    private Integer numberOfLoops;
-    private BigDecimal heatOutput;
-    private BigDecimal totalCost;
 
     @Builder.Default
     @OneToMany(mappedBy = "calculation", cascade = CascadeType.ALL)

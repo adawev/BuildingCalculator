@@ -24,6 +24,4 @@ public class MaterialItem {
     private Material material;
 
     private BigDecimal quantity;
-    private BigDecimal unitPrice;
-    private BigDecimal totalPrice;
 }

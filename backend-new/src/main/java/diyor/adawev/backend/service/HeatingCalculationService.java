@@ -48,12 +48,10 @@ public class HeatingCalculationService {
                 .roomWidth(roomWidth)
                 .roomArea(roomArea)
                 .pipeLength(pipeLength)
-                .totalCost(BigDecimal.ZERO)
                 .build();
 
         // Materiallar hisobi (agar kerak bo'lsa)
         List<MaterialItemResponse> materialItems = new ArrayList<>();
-        BigDecimal totalCost = BigDecimal.ZERO;
 
         if (request.getCalculatePrice()) {
             // Barcha mavjud materiallarni olish
@@ -64,16 +62,10 @@ public class HeatingCalculationService {
                 BigDecimal quantity = BigDecimal.ZERO; // Sizning logikangiz
 
                 if (quantity.compareTo(BigDecimal.ZERO) > 0) {
-                    BigDecimal unitPrice = material.getPricePerUnit() != null ?
-                        material.getPricePerUnit() : BigDecimal.ZERO;
-                    BigDecimal itemTotal = quantity.multiply(unitPrice);
-
                     MaterialItem item = MaterialItem.builder()
                             .calculation(calculation)
                             .material(material)
                             .quantity(quantity)
-                            .unitPrice(unitPrice)
-                            .totalPrice(itemTotal)
                             .build();
                     calculation.getMaterialItems().add(item);
 
@@ -83,16 +75,10 @@ public class HeatingCalculationService {
                             .materialNameRu(material.getNameRu())
                             .quantity(quantity)
                             .unit(material.getUnit())
-                            .unitPrice(unitPrice)
-                            .totalPrice(itemTotal)
                             .build());
-
-                    totalCost = totalCost.add(itemTotal);
                 }
             }
         }
-
-        calculation.setTotalCost(totalCost);
         calculation = calculationRepository.save(calculation);
 
         log.info("Calculation completed. ID: {}", calculation.getId());
@@ -105,7 +91,6 @@ public class HeatingCalculationService {
                 .roomArea(roomArea)
                 .pipeLengthWithReserve(pipeLength)
                 .materials(materialItems)
-                .totalCost(totalCost)
                 .build();
     }
 
@@ -128,8 +113,6 @@ public class HeatingCalculationService {
                         .materialNameRu(item.getMaterial().getNameRu())
                         .quantity(item.getQuantity())
                         .unit(item.getMaterial().getUnit())
-                        .unitPrice(item.getUnitPrice())
-                        .totalPrice(item.getTotalPrice())
                         .build())
                 .toList();
 
@@ -140,10 +123,7 @@ public class HeatingCalculationService {
                 .roomWidth(calculation.getRoomWidth())
                 .roomArea(calculation.getRoomArea())
                 .pipeLengthWithReserve(calculation.getPipeLength())
-                .numberOfLoops(calculation.getNumberOfLoops())
-                .heatOutput(calculation.getHeatOutput())
                 .materials(materials)
-                .totalCost(calculation.getTotalCost())
                 .build();
     }
 }

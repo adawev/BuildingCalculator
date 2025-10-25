@@ -55,7 +55,6 @@ public class MaterialService {
         existing.setNameRu(material.getNameRu());
         existing.setType(material.getType());
         existing.setUnit(material.getUnit());
-        existing.setPricePerUnit(material.getPricePerUnit());
         existing.setIsAvailable(material.getIsAvailable());
 
         Material updated = materialRepository.save(existing);
@@ -80,7 +79,6 @@ public class MaterialService {
                 .nameRu(material.getNameRu())
                 .type(material.getType())
                 .unit(material.getUnit())
-                .pricePerUnit(material.getPricePerUnit())
                 .isAvailable(material.getIsAvailable())
                 .build();
     }

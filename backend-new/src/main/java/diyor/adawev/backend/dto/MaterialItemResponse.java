@@ -13,6 +13,4 @@ public class MaterialItemResponse {
     private String materialNameRu;
     private BigDecimal quantity;
     private String unit;
-    private BigDecimal unitPrice;
-    private BigDecimal totalPrice;
 }

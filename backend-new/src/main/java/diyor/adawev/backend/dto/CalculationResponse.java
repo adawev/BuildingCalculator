@@ -15,8 +15,5 @@ public class CalculationResponse {
     private BigDecimal roomWidth;
     private BigDecimal roomArea;
     private BigDecimal pipeLengthWithReserve;
-    private Integer numberOfLoops;
-    private BigDecimal heatOutput;
     private List<MaterialItemResponse> materials;
-    private BigDecimal totalCost;
 }

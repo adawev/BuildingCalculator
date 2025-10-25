@@ -14,6 +14,5 @@ public class MaterialResponse {
     private String nameRu;
     private Material.MaterialType type;
     private String unit;
-    private BigDecimal pricePerUnit;
     private Boolean isAvailable;
 }

@@ -22,7 +22,6 @@ public class Material {
     private MaterialType type;
 
     private String unit;
-    private BigDecimal pricePerUnit;
 
     @Builder.Default
     private Boolean isAvailable = true;
