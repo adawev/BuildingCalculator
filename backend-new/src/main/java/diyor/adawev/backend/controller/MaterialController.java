@@ -45,7 +45,7 @@ public class MaterialController {
     // Yangi material qo'shish
     @PostMapping
     public ResponseEntity<MaterialResponse> createMaterial(@RequestBody Material material) {
-        log.info("Creating new material: {}", material.getNameUz());
+        log.info("Creating new material: {}", material.getName());
         MaterialResponse created = materialService.createMaterial(material);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

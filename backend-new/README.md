@@ -1,105 +1,51 @@
-# Underfloor Heating Calculator
+# Underfloor Heating Calculator - Backend
 
-Full-stack web app for calculating underfloor heating materials and costs.
+Spring Boot backend для калькулятора теплого пола.
 
-## Tech Stack
+## Технологии
+- Java 17
+- Spring Boot 3.5.7
+- PostgreSQL
+- JPA/Hibernate
 
-**Backend:** Spring Boot + PostgreSQL
-**Frontend:** React + Redux + Material-UI
+## Запуск
 
----
-
-## Quick Setup
-
-### 1. PostgreSQL Setup
-
+### 1. База данных
 ```bash
-# Allow passwordless connection
-sudo nano /etc/postgresql/16/main/pg_hba.conf
-# Change: peer → trust
+# Создать базу данных
+createdb -U postgres heating_calculator
 
-# Reload PostgreSQL
-sudo systemctl reload postgresql
-
-# Create database
-psql -U postgres -c "CREATE DATABASE heating_calculator;"
+# Запустить миграции
+cd migrations
+./run_all.sh
 ```
 
-### 2. Run Backend
+### 2. Конфигурация
+Настройки в `src/main/resources/application.properties`:
+- Database URL: `jdbc:postgresql://localhost:5432/heating_calculator`
+- Username: `postgres`
+- Password: `roots`
 
+### 3. Сборка и запуск
 ```bash
-cd backend
-java -jar target/heating-calculator-1.0.0.jar
+# Сборка
+mvn clean package
+
+# Запуск
+java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
 
-Backend runs on: `http://localhost:8080/api`
-
-### 3. Run Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Frontend runs on: `http://localhost:3000`
-
----
-
-## Configuration
-
-**Backend:** `backend/src/main/resources/application.yml`
-```yaml
-spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/heating_calculator
-    username: postgres
-    password:  # empty for trust auth
-```
-
-**Frontend:** Already configured with CORS
-
----
+API доступен на: http://localhost:8080/api
 
 ## API Endpoints
 
-- `POST /api/calculate` - Calculate heating requirements
-- `GET /api/materials` - List materials
-- `POST /api/projects` - Create project
+### Calculations
+- `POST /api/calculations` - Создать расчет
+- `GET /api/calculations/{id}` - Получить расчет
 
----
-
-## Troubleshooting
-
-**Password error:** Edit `pg_hba.conf` → change `peer` to `trust`
-
-**CORS error:** Already fixed in backend
-
-**Port in use:** Kill process: `pkill -f java` or `pkill -f vite`
-
----
-
-## Project Structure
-
-```
-underfloor-heating-calculator/
-├── backend/
-│   ├── src/main/java/com/underfloorheating/
-│   │   ├── entity/          # Database models
-│   │   ├── repository/      # Data access
-│   │   ├── service/         # Business logic
-│   │   ├── controller/      # REST API
-│   │   └── config/          # CORS & Security
-│   └── target/
-│       └── heating-calculator-1.0.0.jar
-│
-└── frontend/
-    └── src/
-        ├── components/      # React components
-        ├── redux/           # State management
-        └── services/        # API calls
-```
-
----
-
-**That's it!** Simple and clean. 🚀
+### Materials
+- `GET /api/materials` - Все материалы
+- `GET /api/materials/{id}` - Один материал
+- `POST /api/materials` - Создать материал
+- `PUT /api/materials/{id}` - Обновить материал
+- `DELETE /api/materials/{id}` - Удалить материал

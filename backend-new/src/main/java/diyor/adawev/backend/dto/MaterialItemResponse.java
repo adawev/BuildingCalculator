@@ -9,8 +9,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class MaterialItemResponse {
     private Long id;
-    private String materialNameUz;
-    private String materialNameRu;
+    private String materialName;
     private BigDecimal quantity;
     private String unit;
 }

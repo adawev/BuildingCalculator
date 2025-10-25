@@ -10,8 +10,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class MaterialResponse {
     private Long id;
-    private String nameUz;
-    private String nameRu;
+    private String name;
     private Material.MaterialType type;
     private String unit;
     private Boolean isAvailable;

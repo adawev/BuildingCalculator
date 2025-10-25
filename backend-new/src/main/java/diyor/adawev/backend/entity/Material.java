@@ -15,8 +15,7 @@ public class Material {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nameUz;
-    private String nameRu;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     private MaterialType type;

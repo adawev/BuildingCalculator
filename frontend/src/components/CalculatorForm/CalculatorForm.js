@@ -26,11 +26,10 @@ const CalculatorForm = () => {
   const { currentProject } = useSelector((state) => state.project);
 
   const [formData, setFormData] = useState({
-    projectId: currentProject?.id || null,  // Optional - can be null
+    projectId: currentProject?.id || null,
     roomName: '',
     roomLength: '',
     roomWidth: '',
-    pipeSpacing: 15,
     calculatePrice: false,
   });
 
@@ -49,11 +48,9 @@ const CalculatorForm = () => {
       roomName: formData.roomName,
       roomLength: parseFloat(formData.roomLength),
       roomWidth: parseFloat(formData.roomWidth),
-      pipeSpacing: parseFloat(formData.pipeSpacing),
       calculatePrice: formData.calculatePrice,
     };
 
-    // Only include projectId if it exists
     if (formData.projectId) {
       calculationData.projectId = formData.projectId;
     }
@@ -65,7 +62,7 @@ const CalculatorForm = () => {
     <Card elevation={2} sx={{ borderRadius: 2 }}>
       <CardContent sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-          Xona o'lchamlari / Размеры комнаты
+          Размеры комнаты
         </Typography>
 
         {error && (
@@ -79,7 +76,7 @@ const CalculatorForm = () => {
             <Grid item xs={12}>
               <TextField
                 fullWidth
-                label="Xona nomi / Название комнаты"
+                label="Название комнаты"
                 name="roomName"
                 value={formData.roomName}
                 onChange={handleChange}
@@ -92,7 +89,7 @@ const CalculatorForm = () => {
                 fullWidth
                 required
                 type="number"
-                label="Uzunlik (m) / Длина (м)"
+                label="Длина (м)"
                 name="roomLength"
                 value={formData.roomLength}
                 onChange={handleChange}
@@ -106,24 +103,11 @@ const CalculatorForm = () => {
                 fullWidth
                 required
                 type="number"
-                label="Kenglik (m) / Ширина (м)"
+                label="Ширина (м)"
                 name="roomWidth"
                 value={formData.roomWidth}
                 onChange={handleChange}
                 inputProps={{ min: 0.1, step: 0.1 }}
-                sx={{ '& .MuiInputBase-input': { fontSize: '1.05rem', py: 1.5 } }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Shlanka oralig'i (sm) / Расстояние труб (см)"
-                name="pipeSpacing"
-                value={formData.pipeSpacing}
-                onChange={handleChange}
-                inputProps={{ min: 10, max: 30, step: 5 }}
                 sx={{ '& .MuiInputBase-input': { fontSize: '1.05rem', py: 1.5 } }}
               />
             </Grid>
@@ -137,7 +121,7 @@ const CalculatorForm = () => {
                     onChange={handleChange}
                   />
                 }
-                label="Narxni hisoblash / Рассчитать стоимость"
+                label="Рассчитать стоимость"
               />
             </Grid>
 
@@ -151,7 +135,7 @@ const CalculatorForm = () => {
                 startIcon={loading ? <CircularProgress size={20} /> : <CalculateIcon />}
                 sx={{ py: 1.2, mt: 1 }}
               >
-                {loading ? 'Hisoblanyapti...' : 'Hisoblash / Рассчитать'}
+                {loading ? 'Рассчитывается...' : 'Рассчитать'}
               </Button>
             </Grid>
           </Grid>

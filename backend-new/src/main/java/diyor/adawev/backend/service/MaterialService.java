@@ -42,7 +42,7 @@ public class MaterialService {
             material.setIsAvailable(true);
         }
         Material saved = materialRepository.save(material);
-        log.info("Material created: {} (ID: {})", saved.getNameUz(), saved.getId());
+        log.info("Material created: {} (ID: {})", saved.getName(), saved.getId());
         return mapToResponse(saved);
     }
 
@@ -51,14 +51,13 @@ public class MaterialService {
         Material existing = materialRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Material not found"));
 
-        existing.setNameUz(material.getNameUz());
-        existing.setNameRu(material.getNameRu());
+        existing.setName(material.getName());
         existing.setType(material.getType());
         existing.setUnit(material.getUnit());
         existing.setIsAvailable(material.getIsAvailable());
 
         Material updated = materialRepository.save(existing);
-        log.info("Material updated: {} (ID: {})", updated.getNameUz(), updated.getId());
+        log.info("Material updated: {} (ID: {})", updated.getName(), updated.getId());
         return mapToResponse(updated);
     }
 
@@ -69,14 +68,13 @@ public class MaterialService {
         // Soft delete
         material.setIsAvailable(false);
         materialRepository.save(material);
-        log.info("Material deleted: {} (ID: {})", material.getNameUz(), id);
+        log.info("Material deleted: {} (ID: {})", material.getName(), id);
     }
 
     private MaterialResponse mapToResponse(Material material) {
         return MaterialResponse.builder()
                 .id(material.getId())
-                .nameUz(material.getNameUz())
-                .nameRu(material.getNameRu())
+                .name(material.getName())
                 .type(material.getType())
                 .unit(material.getUnit())
                 .isAvailable(material.getIsAvailable())

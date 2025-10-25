@@ -71,8 +71,7 @@ public class HeatingCalculationService {
 
                     materialItems.add(MaterialItemResponse.builder()
                             .id(material.getId())
-                            .materialNameUz(material.getNameUz())
-                            .materialNameRu(material.getNameRu())
+                            .materialName(material.getName())
                             .quantity(quantity)
                             .unit(material.getUnit())
                             .build());
@@ -109,8 +108,7 @@ public class HeatingCalculationService {
         List<MaterialItemResponse> materials = calculation.getMaterialItems().stream()
                 .map(item -> MaterialItemResponse.builder()
                         .id(item.getMaterial().getId())
-                        .materialNameUz(item.getMaterial().getNameUz())
-                        .materialNameRu(item.getMaterial().getNameRu())
+                        .materialName(item.getMaterial().getName())
                         .quantity(item.getQuantity())
                         .unit(item.getMaterial().getUnit())
                         .build())
