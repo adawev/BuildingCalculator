@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class MaterialResponse {
     private Long id;
     private String name;
-    private Material.MaterialType type;
+    private String type;
     private String unit;
     private Boolean isAvailable;
 }

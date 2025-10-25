@@ -8,5 +8,5 @@ import java.util.List;
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, Long> {
     List<Material> findByIsAvailableTrue();
-    List<Material> findByTypeAndIsAvailableTrue(Material.MaterialType type);
+    List<Material> findByTypeAndIsAvailableTrue(String type);
 }

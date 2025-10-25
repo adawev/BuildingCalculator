@@ -16,16 +16,9 @@ public class Material {
     private Long id;
 
     private String name;
-
-    @Enumerated(EnumType.STRING)
-    private MaterialType type;
-
+    private String type;
     private String unit;
 
     @Builder.Default
     private Boolean isAvailable = true;
-
-    public enum MaterialType {
-        PIPE, MANIFOLD, FITTING, VALVE, INSULATION, BASE_MATERIAL, ADHESIVE, OTHER
-    }
 }

@@ -23,7 +23,7 @@ public class MaterialService {
                 .toList();
     }
 
-    public List<MaterialResponse> getMaterialsByType(Material.MaterialType type) {
+    public List<MaterialResponse> getMaterialsByType(String type) {
         return materialRepository.findByTypeAndIsAvailableTrue(type)
                 .stream()
                 .map(this::mapToResponse)

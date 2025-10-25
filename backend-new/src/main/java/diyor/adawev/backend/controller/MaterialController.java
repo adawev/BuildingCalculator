@@ -28,7 +28,7 @@ public class MaterialController {
 
     // Material type bo'yicha olish
     @GetMapping("/type/{type}")
-    public ResponseEntity<List<MaterialResponse>> getMaterialsByType(@PathVariable Material.MaterialType type) {
+    public ResponseEntity<List<MaterialResponse>> getMaterialsByType(@PathVariable String type) {
         log.info("Fetching materials by type: {}", type);
         List<MaterialResponse> materials = materialService.getMaterialsByType(type);
         return ResponseEntity.ok(materials);
