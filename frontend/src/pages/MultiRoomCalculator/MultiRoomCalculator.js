@@ -60,9 +60,8 @@ const MultiRoomCalculator = () => {
       const totalArea = getTotalArea();
       const avgLength = Math.sqrt(parseFloat(totalArea));
 
-      // Calculate for combined area
+      // Calculate for combined area - no projectId needed
       const result = await dispatch(calculateHeating({
-        projectId: 1,
         roomName: `Katta uy - ${rooms.length} xona`,
         roomLength: avgLength,
         roomWidth: avgLength,

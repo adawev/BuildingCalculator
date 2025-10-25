@@ -24,8 +24,8 @@ public class ProjectService {
     public ProjectResponse createProject(ProjectRequest request) {
         User user = null;
 
-        // User is optional - only fetch if userId is provided
-        if (request.getUserId() != null) {
+        // User is optional - only fetch if userId is provided and not null
+        if (request.getUserId() != null && request.getUserId() > 0) {
             user = userRepository.findById(request.getUserId())
                     .orElse(null);
         }

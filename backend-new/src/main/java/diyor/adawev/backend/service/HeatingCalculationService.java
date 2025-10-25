@@ -28,8 +28,11 @@ public class HeatingCalculationService {
 
     @Transactional
     public CalculationResponse calculate(CalculationRequest request) {
-        Project project = projectRepository.findById(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+        // Project is optional - only fetch if projectId is provided and not null
+        Project project = null;
+        if (request.getProjectId() != null && request.getProjectId() > 0) {
+            project = projectRepository.findById(request.getProjectId()).orElse(null);
+        }
 
         BigDecimal roomArea = calculateRoomArea(request.getRoomLength(), request.getRoomWidth());
         BigDecimal pipeLength = calculatePipeLength(roomArea, request.getPipeSpacing());

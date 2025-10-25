@@ -67,18 +67,7 @@ function App() {
     },
   });
 
-  // Initialize a default project on mount
-  useEffect(() => {
-    if (!currentProject) {
-      dispatch(
-        createProject({
-          name: 'Default Project',
-          status: 'DRAFT',
-          userId: 1, // Use demo user
-        })
-      );
-    }
-  }, []);
+  // No need to create default project anymore - calculations work without a project
 
   return (
     <ThemeProvider theme={theme}>

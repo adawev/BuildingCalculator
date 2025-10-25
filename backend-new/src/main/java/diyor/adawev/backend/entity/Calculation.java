@@ -21,7 +21,7 @@ public class Calculation {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
-    private Project project;
+    private Project project;  // Optional - can be null for calculations without a project
 
     private String roomName;
     private BigDecimal roomLength;

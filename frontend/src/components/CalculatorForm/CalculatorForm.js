@@ -26,7 +26,7 @@ const CalculatorForm = () => {
   const { currentProject } = useSelector((state) => state.project);
 
   const [formData, setFormData] = useState({
-    projectId: currentProject?.id || 1,
+    projectId: currentProject?.id || null,  // Optional - can be null
     roomName: '',
     roomLength: '',
     roomWidth: '',
@@ -46,11 +46,17 @@ const CalculatorForm = () => {
     e.preventDefault();
 
     const calculationData = {
-      ...formData,
+      roomName: formData.roomName,
       roomLength: parseFloat(formData.roomLength),
       roomWidth: parseFloat(formData.roomWidth),
       pipeSpacing: parseFloat(formData.pipeSpacing),
+      calculatePrice: formData.calculatePrice,
     };
+
+    // Only include projectId if it exists
+    if (formData.projectId) {
+      calculationData.projectId = formData.projectId;
+    }
 
     dispatch(calculateHeating(calculationData));
   };
