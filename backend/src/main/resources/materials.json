@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Труба 16мм",
+    "type": "PIPE_16",
+    "unit": "м",
+    "isAvailable": true
+  },
+  {
+    "name": "Коллектор",
+    "type": "KOLLEKTOR",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Пеноплекс 30мм",
+    "type": "PENOPLEKS",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Крипление унитаз",
+    "type": "KRIPLENIE_UNITAZ",
+    "unit": "пачка",
+    "isAvailable": true
+  },
+  {
+    "name": "Втулка",
+    "type": "VTULKA",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Утиплител 16",
+    "type": "UTIPLITEL_16",
+    "unit": "м",
+    "isAvailable": true
+  },
+  {
+    "name": "Скоба",
+    "type": "SKOBA",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Фольга",
+    "type": "FOLGA",
+    "unit": "м",
+    "isAvailable": true
+  },
+  {
+    "name": "Пена",
+    "type": "PENA",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Пистолет для Пена",
+    "type": "PISTOLET_PENA",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Чопик 6х40",
+    "type": "CHOPIK_640",
+    "unit": "кг",
+    "isAvailable": true
+  },
+  {
+    "name": "Парашут",
+    "type": "PARASHUT",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Демферний лента",
+    "type": "DEMFERNIY_LENTA",
+    "unit": "м",
+    "isAvailable": true
+  }
+]

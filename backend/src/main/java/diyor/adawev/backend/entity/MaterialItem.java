@@ -18,9 +18,9 @@ public class MaterialItem {
     @JoinColumn(name = "calculation_id")
     private Calculation calculation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "material_id")
-    private Material material;
-
+    // Material ma'lumotlarini to'g'ridan-to'g'ri saqlash (relation o'rniga)
+    private String materialName;
+    private String materialType;
+    private String unit;
     private Float quantity;
 }

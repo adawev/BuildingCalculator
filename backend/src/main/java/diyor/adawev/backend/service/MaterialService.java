@@ -1,83 +1,72 @@
 package diyor.adawev.backend.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import diyor.adawev.backend.dto.MaterialDTO;
 import diyor.adawev.backend.dto.MaterialResponse;
-import diyor.adawev.backend.entity.Material;
-import diyor.adawev.backend.repository.MaterialRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class MaterialService {
-    private final MaterialRepository materialRepository;
+    private final ObjectMapper objectMapper;
+    private List<MaterialDTO> cachedMaterials;
 
-    public List<MaterialResponse> getAllMaterials() {
-        return materialRepository.findByIsAvailableTrue()
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    public List<MaterialResponse> getMaterialsByType(String type) {
-        return materialRepository.findByTypeAndIsAvailableTrue(type)
-                .stream()
-                .map(this::mapToResponse)
-                .toList();
-    }
-
-    public MaterialResponse getMaterial(Long id) {
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
-        return mapToResponse(material);
-    }
-
-    @Transactional
-    public MaterialResponse createMaterial(Material material) {
-        if (material.getIsAvailable() == null) {
-            material.setIsAvailable(true);
+    /**
+     * JSON fayldan materiallarni o'qiydi (faqat bir marta, keyin cache'dan)
+     */
+    public List<MaterialDTO> getAllMaterials() {
+        if (cachedMaterials == null) {
+            cachedMaterials = loadMaterialsFromJson();
         }
-        Material saved = materialRepository.save(material);
-        log.info("Material created: {} (ID: {})", saved.getName(), saved.getId());
-        return mapToResponse(saved);
+        return cachedMaterials;
     }
 
-    @Transactional
-    public MaterialResponse updateMaterial(Long id, Material material) {
-        Material existing = materialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
-
-        existing.setName(material.getName());
-        existing.setType(material.getType());
-        existing.setUnit(material.getUnit());
-        existing.setIsAvailable(material.getIsAvailable());
-
-        Material updated = materialRepository.save(existing);
-        log.info("Material updated: {} (ID: {})", updated.getName(), updated.getId());
-        return mapToResponse(updated);
+    /**
+     * Faqat aktiv materiallarni qaytaradi
+     */
+    public List<MaterialDTO> getAvailableMaterials() {
+        return getAllMaterials().stream()
+                .filter(m -> m.getIsAvailable() != null && m.getIsAvailable())
+                .toList();
     }
 
-    @Transactional
-    public void deleteMaterial(Long id) {
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Material not found"));
-        // Soft delete
-        material.setIsAvailable(false);
-        materialRepository.save(material);
-        log.info("Material deleted: {} (ID: {})", material.getName(), id);
+    /**
+     * JSON fayldan materiallarni yuklash
+     */
+    private List<MaterialDTO> loadMaterialsFromJson() {
+        try {
+            ClassPathResource resource = new ClassPathResource("materials.json");
+            try (InputStream inputStream = resource.getInputStream()) {
+                return objectMapper.readValue(
+                    inputStream,
+                    new TypeReference<List<MaterialDTO>>() {}
+                );
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading materials from JSON: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
-    private MaterialResponse mapToResponse(Material material) {
-        return MaterialResponse.builder()
-                .id(material.getId())
-                .name(material.getName())
-                .type(material.getType())
-                .unit(material.getUnit())
-                .isAvailable(material.getIsAvailable())
-                .build();
+    /**
+     * API uchun MaterialResponse formatida qaytarish
+     */
+    public List<MaterialResponse> getAllMaterialsAsResponse() {
+        return getAllMaterials().stream()
+                .map(material -> MaterialResponse.builder()
+                        .name(material.getName())
+                        .type(material.getType())
+                        .unit(material.getUnit())
+                        .isAvailable(material.getIsAvailable())
+                        .build())
+                .toList();
     }
 }

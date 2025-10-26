@@ -14,7 +14,7 @@ import java.util.*;
 public class HeatingCalculationService {
     private final CalculationRepository calculationRepository;
     private final ProjectRepository projectRepository;
-    private final MaterialRepository materialRepository;
+    private final MaterialService materialService;
 
     @Transactional
     public CalculationResponse calculate(CalculationRequest request) {
@@ -49,7 +49,7 @@ public class HeatingCalculationService {
         List<MaterialItemResponse> materialItems = new ArrayList<>();
 
         if (request.getCalculatePrice()) {
-            List<Material> materials = materialRepository.findByIsAvailableTrue();
+            List<MaterialDTO> materials = materialService.getAvailableMaterials();
 
             Float pipeCount = pipeLength;
             Float kollektorCount = 1f;
@@ -67,7 +67,7 @@ public class HeatingCalculationService {
             Float demferniyLentaCount = 2f * (roomLength + roomWidth);
 
 
-            for (Material material : materials) {
+            for (MaterialDTO material : materials) {
                 Float quantity = 0f;
                 String type = material.getType();
 
@@ -103,9 +103,12 @@ public class HeatingCalculationService {
                 }
 
                 if (quantity > 0f) {
+                    // MaterialItem'ni to'g'ridan-to'g'ri ma'lumotlar bilan saqlash
                     MaterialItem item = MaterialItem.builder()
                             .calculation(calculation)
-                            .material(material)
+                            .materialName(material.getName())
+                            .materialType(material.getType())
+                            .unit(material.getUnit())
                             .quantity(quantity)
                             .build();
                     calculation.getMaterialItems().add(item);
@@ -113,11 +116,10 @@ public class HeatingCalculationService {
                     String displayName = material.getName();
 
                     if (type != null && type.toLowerCase().contains("kollektor")) {
-                        displayName = material.getName() + kollektorNameCount + "контр";
+                        displayName = material.getName() + " " + kollektorNameCount.intValue() + "контр";
                     }
 
                     materialItems.add(MaterialItemResponse.builder()
-                            .id(material.getId())
                             .materialName(displayName)
                             .quantity(quantity)
                             .unit(material.getUnit())
@@ -156,22 +158,21 @@ public class HeatingCalculationService {
     private CalculationResponse mapToResponse(Calculation calculation) {
         List<MaterialItemResponse> materials = calculation.getMaterialItems().stream()
                 .map(item -> {
-                    String displayName = item.getMaterial().getName();
-                    String type = item.getMaterial().getType();
+                    String displayName = item.getMaterialName();
+                    String type = item.getMaterialType();
 
                     // Agar kollektor bo'lsa
                     if (type != null && type.toLowerCase().contains("kollektor")) {
                         int count = item.getQuantity().intValue();
-                        displayName = item.getMaterial().getName() + " × " + count;
+                        displayName = item.getMaterialName() + " × " + count;
                     }
 
                     return MaterialItemResponse.builder()
-                            .id(item.getMaterial().getId())
                             .materialName(displayName)
                             .quantity(item.getQuantity())
-                            .unit(item.getMaterial().getUnit())
-                            .originalName(item.getMaterial().getName())
-                            .type(item.getMaterial().getType())
+                            .unit(item.getUnit())
+                            .originalName(item.getMaterialName())
+                            .type(item.getMaterialType())
                             .build();
                 })
                 .toList();
