@@ -5,7 +5,6 @@ import diyor.adawev.backend.dto.ProjectResponse;
 import diyor.adawev.backend.entity.Project;
 import diyor.adawev.backend.repository.ProjectRepository;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,7 +12,6 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class ProjectService {
     private final ProjectRepository projectRepository;
 
@@ -25,8 +23,6 @@ public class ProjectService {
                 .build();
 
         project = projectRepository.save(project);
-        log.info("Created project: {}", project.getName());
-
         return mapToResponse(project);
     }
 
@@ -43,8 +39,6 @@ public class ProjectService {
         }
 
         project = projectRepository.save(project);
-        log.info("Updated project: {}", project.getName());
-
         return mapToResponse(project);
     }
 
@@ -66,7 +60,6 @@ public class ProjectService {
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         projectRepository.delete(project);
-        log.info("Deleted project: {}", project.getName());
     }
 
     private ProjectResponse mapToResponse(Project project) {

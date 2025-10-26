@@ -6,8 +6,14 @@
     "isAvailable": true
   },
   {
-    "name": "Коллектор",
+    "name": "Коллектор ",
     "type": "KOLLEKTOR",
+    "unit": "шт",
+    "isAvailable": true
+  },
+  {
+    "name": "Коллектор ",
+    "type": "KOLLEKTOR2",
     "unit": "шт",
     "isAvailable": true
   },

@@ -19,9 +19,6 @@ public class MaterialService {
     private final ObjectMapper objectMapper;
     private List<MaterialDTO> cachedMaterials;
 
-    /**
-     * JSON fayldan materiallarni o'qiydi (faqat bir marta, keyin cache'dan)
-     */
     public List<MaterialDTO> getAllMaterials() {
         if (cachedMaterials == null) {
             cachedMaterials = loadMaterialsFromJson();
@@ -29,43 +26,31 @@ public class MaterialService {
         return cachedMaterials;
     }
 
-    /**
-     * Faqat aktiv materiallarni qaytaradi
-     */
     public List<MaterialDTO> getAvailableMaterials() {
         return getAllMaterials().stream()
                 .filter(m -> m.getIsAvailable() != null && m.getIsAvailable())
                 .toList();
     }
 
-    /**
-     * JSON fayldan materiallarni yuklash
-     */
     private List<MaterialDTO> loadMaterialsFromJson() {
         try {
             ClassPathResource resource = new ClassPathResource("materials.json");
             try (InputStream inputStream = resource.getInputStream()) {
-                return objectMapper.readValue(
-                    inputStream,
-                    new TypeReference<List<MaterialDTO>>() {}
-                );
+                return objectMapper.readValue(inputStream, new TypeReference<List<MaterialDTO>>() {});
             }
         } catch (IOException e) {
-            System.err.println("Error loading materials from JSON: " + e.getMessage());
+            System.err.println("Error loading materials: " + e.getMessage());
             return new ArrayList<>();
         }
     }
 
-    /**
-     * API uchun MaterialResponse formatida qaytarish
-     */
     public List<MaterialResponse> getAllMaterialsAsResponse() {
         return getAllMaterials().stream()
-                .map(material -> MaterialResponse.builder()
-                        .name(material.getName())
-                        .type(material.getType())
-                        .unit(material.getUnit())
-                        .isAvailable(material.getIsAvailable())
+                .map(m -> MaterialResponse.builder()
+                        .name(m.getName())
+                        .type(m.getType())
+                        .unit(m.getUnit())
+                        .isAvailable(m.getIsAvailable())
                         .build())
                 .toList();
     }
