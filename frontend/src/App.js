@@ -15,7 +15,7 @@ function App() {
   const dispatch = useDispatch();
   const { currentProject } = useSelector((state) => state.project);
 
-  // Create theme with green/white color scheme
+  // Create theme with #576861 primary, white secondary, and colorful accents
   const theme = createTheme({
     typography: {
       fontFamily: [
@@ -37,15 +37,29 @@ function App() {
         main: '#ffffff',
         contrastText: '#576861',
       },
-      background: {
-        default: '#f5f7f6',
-        paper: '#ffffff',
-      },
       success: {
-        main: '#576861',
+        main: '#22c55e',
+        light: '#4ade80',
+        dark: '#16a34a',
+      },
+      error: {
+        main: '#ef4444',
+        light: '#f87171',
+        dark: '#dc2626',
       },
       warning: {
         main: '#f59e0b',
+        light: '#fbbf24',
+        dark: '#d97706',
+      },
+      info: {
+        main: '#3b82f6',
+        light: '#60a5fa',
+        dark: '#2563eb',
+      },
+      background: {
+        default: '#f8f9fa',
+        paper: '#ffffff',
       },
     },
     components: {
