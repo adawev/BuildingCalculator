@@ -6,13 +6,13 @@
     "isAvailable": true
   },
   {
-    "name": "Коллектор ",
+    "name": "Коллектор",
     "type": "KOLLEKTOR",
     "unit": "шт",
     "isAvailable": true
   },
   {
-    "name": "Коллектор ",
+    "name": "Коллектор",
     "type": "KOLLEKTOR2",
     "unit": "шт",
     "isAvailable": true
@@ -24,9 +24,9 @@
     "isAvailable": true
   },
   {
-    "name": "Крипление унитаз",
+    "name": "Крепление унитаз",
     "type": "KRIPLENIE_UNITAZ",
-    "unit": "пачка",
+    "unit": "уп",
     "isAvailable": true
   },
   {
@@ -36,7 +36,7 @@
     "isAvailable": true
   },
   {
-    "name": "Утиплител 16",
+    "name": "Утеплитель 16мм",
     "type": "UTIPLITEL_16",
     "unit": "м",
     "isAvailable": true
@@ -50,35 +50,35 @@
   {
     "name": "Фольга",
     "type": "FOLGA",
-    "unit": "м",
+    "unit": "м²",
     "isAvailable": true
   },
   {
-    "name": "Пена",
+    "name": "Пена монтажная",
     "type": "PENA",
     "unit": "шт",
     "isAvailable": true
   },
   {
-    "name": "Пистолет для Пена",
+    "name": "Пистолет для пены",
     "type": "PISTOLET_PENA",
     "unit": "шт",
     "isAvailable": true
   },
   {
-    "name": "Чопик 6х40",
+    "name": "Дюбель 6×40",
     "type": "CHOPIK_640",
     "unit": "кг",
     "isAvailable": true
   },
   {
-    "name": "Парашут",
+    "name": "Тарельчатый дюбель",
     "type": "PARASHUT",
     "unit": "шт",
     "isAvailable": true
   },
   {
-    "name": "Демферний лента",
+    "name": "Демпферная лента",
     "type": "DEMFERNIY_LENTA",
     "unit": "м",
     "isAvailable": true

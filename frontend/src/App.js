@@ -15,7 +15,7 @@ function App() {
   const dispatch = useDispatch();
   const { currentProject } = useSelector((state) => state.project);
 
-  // Create theme with better font
+  // Create theme with green/white color scheme
   const theme = createTheme({
     typography: {
       fontFamily: [
@@ -28,13 +28,21 @@ function App() {
     },
     palette: {
       primary: {
-        main: '#667eea',
+        main: '#576861',
+        light: '#6f8179',
+        dark: '#3f4f48',
+        contrastText: '#ffffff',
       },
       secondary: {
-        main: '#764ba2',
+        main: '#ffffff',
+        contrastText: '#576861',
+      },
+      background: {
+        default: '#f5f7f6',
+        paper: '#ffffff',
       },
       success: {
-        main: '#10b981',
+        main: '#576861',
       },
       warning: {
         main: '#f59e0b',

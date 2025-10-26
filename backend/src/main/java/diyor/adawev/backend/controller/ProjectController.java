@@ -1,7 +1,6 @@
 package diyor.adawev.backend.controller;
 
-import diyor.adawev.backend.dto.ProjectRequest;
-import diyor.adawev.backend.dto.ProjectResponse;
+import diyor.adawev.backend.dto.*;
 import diyor.adawev.backend.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,5 +39,10 @@ public class ProjectController {
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<ProjectSummaryResponse> getProjectSummary(@PathVariable Long id) {
+        return ResponseEntity.ok(projectService.getProjectSummary(id));
     }
 }

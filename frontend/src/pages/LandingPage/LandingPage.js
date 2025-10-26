@@ -8,11 +8,10 @@ import {
   Card,
   CardContent,
   CardActionArea,
-  CardMedia,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import ApartmentIcon from '@mui/icons-material/Apartment';
-import ArchitectureIcon from '@mui/icons-material/Architecture';
+import logo from '../../features/images/logo.png';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -20,33 +19,19 @@ const LandingPage = () => {
   const options = [
     {
       id: 1,
-      titleUz: 'Bitta xona hisoblash',
-      titleRu: 'Расчет одной комнаты',
-      descriptionUz: 'Bir xona uchun material va narxni hisoblang',
-      descriptionRu: 'Рассчитайте материалы и стоимость для одной комнаты',
+      title: 'Расчет одной комнаты',
+      description: 'Быстрый расчет материалов для одной комнаты',
       icon: <HomeIcon sx={{ fontSize: 80, color: 'primary.main' }} />,
       path: '/calculator',
       available: true,
     },
     {
       id: 2,
-      titleUz: 'Katta uy hisoblash',
-      titleRu: 'Расчет большого дома',
-      descriptionUz: 'Ko\'p xonali uy uchun to\'liq hisob',
-      descriptionRu: 'Полный расчет для дома с несколькими комнатами',
-      icon: <ApartmentIcon sx={{ fontSize: 80, color: 'success.main' }} />,
+      title: 'Расчет для всего дома',
+      description: 'Полный расчет материалов для нескольких комнат с итоговым отчетом',
+      icon: <ApartmentIcon sx={{ fontSize: 80, color: 'primary.main' }} />,
       path: '/multi-room',
       available: true,
-    },
-    {
-      id: 3,
-      titleUz: 'Proyekt chizmasi',
-      titleRu: 'Проектный чертеж',
-      descriptionUz: 'Xonalarda trubalarning joylashuvi (tez orada)',
-      descriptionRu: 'Визуализация укладки труб (скоро)',
-      icon: <ArchitectureIcon sx={{ fontSize: 80, color: 'warning.main' }} />,
-      path: '/project-drawing',
-      available: false,
     },
   ];
 
@@ -54,13 +39,24 @@ const LandingPage = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        pt: 8,
+        background: 'linear-gradient(135deg, #576861 0%, #3f4f48 100%)',
+        pt: 6,
         pb: 6,
       }}
     >
       <Container maxWidth="lg">
         <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Box sx={{ mb: 3 }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                maxWidth: '200px',
+                height: 'auto',
+                marginBottom: '1rem'
+              }}
+            />
+          </Box>
           <Typography
             variant="h2"
             sx={{
@@ -70,17 +66,17 @@ const LandingPage = () => {
               fontSize: { xs: '2rem', md: '3rem' },
             }}
           >
-            Tyopliy Pol Kalkulyator
+            Калькулятор теплого пола
           </Typography>
           <Typography
-            variant="h5"
+            variant="h6"
             sx={{
               color: 'rgba(255, 255, 255, 0.9)',
               fontWeight: 400,
-              fontSize: { xs: '1rem', md: '1.5rem' },
+              fontSize: { xs: '0.9rem', md: '1.2rem' },
             }}
           >
-            Калькулятор теплых полов
+            Профессиональный расчет материалов для водяного теплого пола
           </Typography>
         </Box>
 
@@ -124,51 +120,19 @@ const LandingPage = () => {
                       variant="h5"
                       sx={{
                         fontWeight: 600,
-                        mb: 1,
-                        color: 'text.primary',
-                      }}
-                    >
-                      {option.titleUz}
-                    </Typography>
-
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 400,
                         mb: 2,
-                        color: 'text.secondary',
-                        fontSize: '1rem',
+                        color: 'primary.main',
                       }}
                     >
-                      {option.titleRu}
+                      {option.title}
                     </Typography>
 
                     <Typography
                       variant="body1"
-                      sx={{ color: 'text.secondary', mb: 1 }}
-                    >
-                      {option.descriptionUz}
-                    </Typography>
-
-                    <Typography
-                      variant="body2"
                       sx={{ color: 'text.secondary' }}
                     >
-                      {option.descriptionRu}
+                      {option.description}
                     </Typography>
-
-                    {!option.available && (
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          mt: 2,
-                          color: 'warning.main',
-                          fontStyle: 'italic',
-                        }}
-                      >
-                        Tez orada / Скоро
-                      </Typography>
-                    )}
                   </CardContent>
                 </CardActionArea>
               </Card>
