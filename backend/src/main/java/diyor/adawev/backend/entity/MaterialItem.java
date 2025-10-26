@@ -2,7 +2,6 @@ package diyor.adawev.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.math.BigDecimal;
 
 @Entity
 @Table(name = "material_items")
@@ -23,5 +22,5 @@ public class MaterialItem {
     @JoinColumn(name = "material_id")
     private Material material;
 
-    private BigDecimal quantity;
+    private Float quantity;
 }

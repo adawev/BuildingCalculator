@@ -1,7 +1,6 @@
 package diyor.adawev.backend.dto;
 
 import lombok.*;
-import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -11,9 +10,9 @@ import java.util.List;
 public class CalculationResponse {
     private Long id;
     private String roomName;
-    private BigDecimal roomLength;
-    private BigDecimal roomWidth;
-    private BigDecimal roomArea;
-    private BigDecimal pipeLengthWithReserve;
+    private Float roomLength;
+    private Float roomWidth;
+    private Float roomArea;
+    private Float pipeLengthWithReserve;
     private List<MaterialItemResponse> materials;
 }

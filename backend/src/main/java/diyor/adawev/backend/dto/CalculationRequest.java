@@ -1,7 +1,6 @@
 package diyor.adawev.backend.dto;
 
 import lombok.*;
-import java.math.BigDecimal;
 
 @Data
 @Builder
@@ -10,8 +9,8 @@ import java.math.BigDecimal;
 public class CalculationRequest {
     private Long projectId;
     private String roomName;
-    private BigDecimal roomLength;
-    private BigDecimal roomWidth;
+    private Float roomLength;
+    private Float roomWidth;
 
     @Builder.Default
     private Boolean calculatePrice = false;

@@ -4,27 +4,21 @@ import diyor.adawev.backend.dto.*;
 import diyor.adawev.backend.entity.*;
 import diyor.adawev.backend.repository.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.http.client.AbstractHttpRequestFactoryProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.*;
 
 @Service
 @RequiredArgsConstructor
-@Slf4j
 public class HeatingCalculationService {
     private final CalculationRepository calculationRepository;
     private final ProjectRepository projectRepository;
     private final MaterialRepository materialRepository;
-    private final AbstractHttpRequestFactoryProperties abstractHttpRequestFactoryProperties;
 
     @Transactional
     public CalculationResponse calculate(CalculationRequest request) {
-        log.info("Starting calculation for room: {}", request.getRoomName());
+        // Starting calculation for room
 
         // Project optional
         Project project = null;
@@ -33,12 +27,12 @@ public class HeatingCalculationService {
         }
 
         // Input ma'lumotlar:
-        BigDecimal roomLength = request.getRoomLength();
-        BigDecimal roomWidth = request.getRoomWidth();
+        Float roomLength = request.getRoomLength();
+        Float roomWidth = request.getRoomWidth();
 
         // TODO: Sizning hisob-kitoblaringiz
-        BigDecimal roomArea = roomLength.multiply(roomWidth);         // Xona maydoni (m²)
-        BigDecimal pipeLength = roomArea.multiply(new BigDecimal("5"));       // Shlanka uzunligi (m)
+        Float roomArea = roomLength * roomWidth;         // Xona maydoni (m²)
+        Float pipeLength = roomArea * 5f;       // Shlanka uzunligi (m)
 
 
         // Calculation entity yaratish
@@ -57,24 +51,24 @@ public class HeatingCalculationService {
         if (request.getCalculatePrice()) {
             List<Material> materials = materialRepository.findByIsAvailableTrue();
 
-            BigDecimal pipeCount = pipeLength;
-            BigDecimal kollektorCount = new BigDecimal("1");
-            BigDecimal kollektorNameCount = pipeLength.divide(new BigDecimal("32"), 0, java.math.RoundingMode.UP);
-            BigDecimal penopleksCount = roomArea.divide(new BigDecimal("0.7"), RoundingMode.HALF_UP);
-            BigDecimal kriplenieUnitazCount = kollektorCount.multiply(new BigDecimal("2"));
-            BigDecimal vtulkaCount = kollektorNameCount.multiply(new BigDecimal("2"));
-            BigDecimal utiplitel16Count = kollektorNameCount.multiply(new BigDecimal("0.7"));
-            BigDecimal skobaCount = roomArea.multiply(new BigDecimal("30"));
-            BigDecimal folgaCount = roomArea;
-            BigDecimal penaCount = roomArea.divide(new BigDecimal("6"), RoundingMode.UP);
-            BigDecimal pistoletPenaCount = new BigDecimal("1");
-            BigDecimal chopikCount = roomArea;
-            BigDecimal parashutCount = roomArea;
-            BigDecimal demferniyLentaCount = new BigDecimal("2").multiply(roomLength.multiply(roomWidth));
+            Float pipeCount = pipeLength;
+            Float kollektorCount = 1f;
+            Float kollektorNameCount = (float) Math.ceil(pipeLength / 32f);
+            Float penopleksCount = (float) Math.ceil(roomArea / 0.7f);
+            Float kriplenieUnitazCount = kollektorCount * 2f;
+            Float vtulkaCount = kollektorNameCount * 2f;
+            Float utiplitel16Count = kollektorNameCount * 0.7f;
+            Float skobaCount = roomArea * 30f;
+            Float folgaCount = roomArea;
+            Float penaCount = (float) Math.ceil(roomArea / 6f);
+            Float pistoletPenaCount = 1f;
+            Float chopikCount = roomArea;
+            Float parashutCount = roomArea;
+            Float demferniyLentaCount = 2f * (roomLength + roomWidth);
 
 
             for (Material material : materials) {
-                BigDecimal quantity = BigDecimal.ZERO;
+                Float quantity = 0f;
                 String type = material.getType();
 
                 // Type bo'yicha hisoblash
@@ -108,7 +102,7 @@ public class HeatingCalculationService {
                     }
                 }
 
-                if (quantity.compareTo(BigDecimal.ZERO) > 0) {
+                if (quantity > 0f) {
                     MaterialItem item = MaterialItem.builder()
                             .calculation(calculation)
                             .material(material)
@@ -135,7 +129,7 @@ public class HeatingCalculationService {
         }
         calculation = calculationRepository.save(calculation);
 
-        log.info("Calculation completed. ID: {}", calculation.getId());
+        // Calculation completed
 
         return CalculationResponse.builder()
                 .id(calculation.getId())

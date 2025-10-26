@@ -1,21 +1,14 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Box,
   Card,
   CardContent,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Typography,
   Grid,
   Alert,
   CircularProgress,
-  Checkbox,
-  FormControlLabel,
 } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import { calculateHeating } from '../../store/reducers/calculation';
@@ -30,7 +23,6 @@ const CalculatorForm = () => {
     roomName: '',
     roomLength: '',
     roomWidth: '',
-    calculatePrice: false,
   });
 
   const handleChange = (e) => {
@@ -48,7 +40,7 @@ const CalculatorForm = () => {
       roomName: formData.roomName,
       roomLength: parseFloat(formData.roomLength),
       roomWidth: parseFloat(formData.roomWidth),
-      calculatePrice: formData.calculatePrice,
+      calculatePrice: true,  // Always calculate materials
     };
 
     if (formData.projectId) {
@@ -109,19 +101,6 @@ const CalculatorForm = () => {
                 onChange={handleChange}
                 inputProps={{ min: 0.1, step: 0.1 }}
                 sx={{ '& .MuiInputBase-input': { fontSize: '1.05rem', py: 1.5 } }}
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    name="calculatePrice"
-                    checked={formData.calculatePrice}
-                    onChange={handleChange}
-                  />
-                }
-                label="Рассчитать стоимость"
               />
             </Grid>
 
