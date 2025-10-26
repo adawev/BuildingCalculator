@@ -89,10 +89,10 @@ public class HeatingCalculationService {
                         quantity = skobaCount;
                     } else if (type.contains("FOLGA")) {
                         quantity = folgaCount;
-                    } else if (type.contains("PENA")) {
-                        quantity = penaCount;
                     } else if (type.contains("PISTOLET_PENA")) {
                         quantity = pistoletPenaCount;
+                    } else if (type.contains("PENA")) {
+                        quantity = penaCount;
                     } else if (type.contains("CHOPIK_640")) {
                         quantity = chopikCount;
                     } else if (type.contains("PARASHUT")) {
@@ -113,7 +113,7 @@ public class HeatingCalculationService {
                     String displayName = material.getName();
 
                     if (type != null && type.toLowerCase().contains("kollektor")) {
-                        displayName = material.getName() + " × " + kollektorNameCount;
+                        displayName = material.getName() + kollektorNameCount + "контр";
                     }
 
                     materialItems.add(MaterialItemResponse.builder()
