@@ -33,11 +33,12 @@ import SearchIcon from '@mui/icons-material/Search';
 import HomeIcon from '@mui/icons-material/Home';
 import DeleteIcon from '@mui/icons-material/Delete';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import EditIcon from '@mui/icons-material/Edit';
 import logo from '../../features/images/logo.png';
 
 const API_URL = 'http://localhost:8080/api';
 
-const ProjectRow = ({ project, calculations, onDelete, onDownloadPdf }) => {
+const ProjectRow = ({ project, calculations, onDelete, onDownloadPdf, onEdit }) => {
   const [open, setOpen] = useState(false);
 
   const formatDate = (dateString) => {
@@ -83,6 +84,14 @@ const ProjectRow = ({ project, calculations, onDelete, onDownloadPdf }) => {
             title="Скачать PDF"
           >
             <PictureAsPdfIcon fontSize="small" />
+          </IconButton>
+          <IconButton
+            size="small"
+            color="info"
+            onClick={() => onEdit(project)}
+            title="Изменить название"
+          >
+            <EditIcon fontSize="small" />
           </IconButton>
           <IconButton
             size="small"
@@ -213,6 +222,11 @@ const History = () => {
 
     setFilteredProjects(filtered);
     setPage(0);
+  };
+
+  const handleEditProject = (project) => {
+    // Navigate to multi-room calculator with project ID to edit
+    navigate(`/multi-room?projectId=${project.id}`);
   };
 
   const handleDeleteProject = (project) => {
@@ -388,6 +402,7 @@ const History = () => {
                           calculations={projectCalculations[project.id] || []}
                           onDelete={handleDeleteProject}
                           onDownloadPdf={handleDownloadPdf}
+                          onEdit={handleEditProject}
                         />
                       ))
                     ) : (

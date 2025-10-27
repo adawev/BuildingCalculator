@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import {
   Container,
@@ -36,7 +36,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HomeIcon from '@mui/icons-material/Home';
-import SaveIcon from '@mui/icons-material/Save';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import logo from '../../features/images/logo.png';
 
@@ -44,6 +43,7 @@ const API_URL = 'http://localhost:8080/api';
 
 const MultiRoomCalculator = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [projectName, setProjectName] = useState('Мой дом');
   const [projectId, setProjectId] = useState(null);
   const [rooms, setRooms] = useState([]);
@@ -59,8 +59,15 @@ const MultiRoomCalculator = () => {
   const [deleteDialog, setDeleteDialog] = useState({ open: false, roomId: null, roomName: '' });
   const [deleteProjectDialog, setDeleteProjectDialog] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const summaryTimeoutRef = useRef(null);
+
+  // Load project if projectId is provided in URL
+  useEffect(() => {
+    const projectIdFromUrl = searchParams.get('projectId');
+    if (projectIdFromUrl) {
+      loadProject(projectIdFromUrl);
+    }
+  }, [searchParams]);
 
   const showNotification = (message, severity = 'success') => {
     setNotification({ open: true, message, severity });
@@ -68,6 +75,32 @@ const MultiRoomCalculator = () => {
 
   const handleCloseNotification = () => {
     setNotification({ ...notification, open: false });
+  };
+
+  // Load existing project
+  const loadProject = async (pId) => {
+    try {
+      setLoading(true);
+
+      // Get project details
+      const projectResp = await axios.get(`${API_URL}/projects/${pId}`);
+      setProjectName(projectResp.data.name);
+      setProjectId(pId);
+
+      // Get all calculations for this project
+      const calcsResp = await axios.get(`${API_URL}/calculations/project/${pId}`);
+      setRooms(calcsResp.data);
+
+      // Load summary
+      loadSummaryDebounced(pId);
+
+      showNotification('Project yuklandi!', 'success');
+    } catch (error) {
+      console.error('Error loading project:', error);
+      showNotification('Project yuklashda xatolik', 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Debounced summary loader
@@ -184,19 +217,18 @@ const MultiRoomCalculator = () => {
     }
   };
 
-  const handleSaveProject = async () => {
-    if (!projectId) return;
+  const handleUpdateProjectName = async () => {
+    if (!projectId || !projectName.trim()) return;
 
     try {
       await axios.put(`${API_URL}/projects/${projectId}`, {
         name: projectName,
         status: 'DRAFT',
       });
-      setHasUnsavedChanges(false);
-      showNotification('Project saqlandi!', 'success');
+      showNotification('Project nomi o\'zgartirildi!', 'success');
     } catch (error) {
-      console.error('Error saving project:', error);
-      showNotification('Project saqlashda xatolik', 'error');
+      console.error('Error updating project name:', error);
+      showNotification('Project nomini o\'zgartirishda xatolik', 'error');
     }
   };
 
@@ -212,7 +244,6 @@ const MultiRoomCalculator = () => {
       setRooms([]);
       setSummary(null);
       setProjectName('Мой дом');
-      setHasUnsavedChanges(false);
     } catch (error) {
       console.error('Error deleting project:', error);
       showNotification('Project o\'chirishda xatolik', 'error');
@@ -320,15 +351,6 @@ const MultiRoomCalculator = () => {
           </Button>
           <Button
             variant="contained"
-            color="success"
-            startIcon={<SaveIcon />}
-            onClick={handleSaveProject}
-            disabled={!hasUnsavedChanges || !projectId}
-          >
-            Saqlash
-          </Button>
-          <Button
-            variant="contained"
             color="error"
             startIcon={<DeleteIcon />}
             onClick={() => setDeleteProjectDialog(true)}
@@ -340,18 +362,26 @@ const MultiRoomCalculator = () => {
 
         {/* Project Name */}
         <Paper sx={{ p: 3, mb: 3 }}>
-          <TextField
-            fullWidth
-            label="Название проекта"
-            value={projectName}
-            onChange={(e) => {
-              setProjectName(e.target.value);
-              if (projectId) setHasUnsavedChanges(true);
-            }}
-            disabled={projectId !== null}
-            variant="outlined"
-            sx={{ mb: 0 }}
-          />
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+            <TextField
+              fullWidth
+              label="Название проекта"
+              value={projectName}
+              onChange={(e) => setProjectName(e.target.value)}
+              variant="outlined"
+              sx={{ mb: 0 }}
+            />
+            {projectId && (
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleUpdateProjectName}
+                sx={{ minWidth: '120px', height: '56px' }}
+              >
+                Сохранить имя
+              </Button>
+            )}
+          </Box>
         </Paper>
 
         <Grid container spacing={3}>

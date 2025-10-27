@@ -1,5 +1,7 @@
 package diyor.adawev.backend.service;
 
+import diyor.adawev.backend.dto.CalculationResponse;
+import diyor.adawev.backend.dto.MaterialItemResponse;
 import diyor.adawev.backend.dto.MaterialSummary;
 import diyor.adawev.backend.dto.ProjectSummaryResponse;
 import lombok.RequiredArgsConstructor;
@@ -8,8 +10,10 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,164 +29,298 @@ public class PdfService {
         ProjectSummaryResponse summary = projectService.getProjectSummary(projectId);
 
         try (PDDocument document = new PDDocument()) {
-            // Load a font that supports Cyrillic characters
-            InputStream fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf");
+            // Load fonts that support Cyrillic characters
+            InputStream fontStream = getClass().getClassLoader().getResourceAsStream("fonts/DejaVuSans.ttf");
+            InputStream boldFontStream = getClass().getClassLoader().getResourceAsStream("fonts/DejaVuSans-Bold.ttf");
+
             PDType0Font font;
             PDType0Font boldFont;
 
             if (fontStream != null) {
                 font = PDType0Font.load(document, fontStream);
-                fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans-Bold.ttf");
-                boldFont = fontStream != null ? PDType0Font.load(document, fontStream) : font;
+                fontStream.close();
+                if (boldFontStream != null) {
+                    boldFont = PDType0Font.load(document, boldFontStream);
+                    boldFontStream.close();
+                } else {
+                    boldFont = font;
+                }
             } else {
-                // Fallback to system font
-                font = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/FreeSans.ttf"));
-                boldFont = font;
+                throw new IOException("Font files not found. Please add DejaVu fonts to resources/fonts/");
             }
 
+            // Load logo
+            PDImageXObject logo = null;
+            try {
+                InputStream logoStream = getClass().getClassLoader().getResourceAsStream("logo.png");
+                if (logoStream != null) {
+                    logo = PDImageXObject.createFromByteArray(document, logoStream.readAllBytes(), "logo");
+                    logoStream.close();
+                }
+            } catch (Exception e) {
+                System.out.println("Logo not found, continuing without logo");
+            }
+
+            // Create first page
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
-            try (PDPageContentStream contentStream = new PDPageContentStream(document, page)) {
-                float margin = 50;
-                float yStart = page.getMediaBox().getHeight() - margin;
-                float yPosition = yStart;
-                float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
+            float margin = 50;
+            float yStart = page.getMediaBox().getHeight() - margin;
+            float yPosition = yStart;
+            float pageWidth = page.getMediaBox().getWidth();
+            float contentWidth = pageWidth - 2 * margin;
 
-                // Use TrueType font that supports Cyrillic
-                contentStream.setFont(boldFont, 18);
+            PDPageContentStream contentStream = new PDPageContentStream(document, page);
 
-                // Title
-                String title = "Project Summary #" + projectId;
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText(title);
-                contentStream.endText();
-                yPosition -= 30;
+            // Draw logo if available
+            if (logo != null) {
+                float logoHeight = 40;
+                float logoWidth = logo.getWidth() * (logoHeight / logo.getHeight());
+                contentStream.drawImage(logo, margin, yPosition - logoHeight, logoWidth, logoHeight);
+                yPosition -= logoHeight + 10;
+            }
 
-                // Project info
-                contentStream.setFont(font, 12);
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Project: " + (summary.getProjectName() != null ? summary.getProjectName() : ""));
-                contentStream.endText();
+            // Title
+            contentStream.setFont(boldFont, 20);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin, yPosition);
+            contentStream.showText("Отчет по проекту");
+            contentStream.endText();
+            yPosition -= 30;
+
+            // Project info box
+            drawBox(contentStream, margin, yPosition - 80, contentWidth, 75, new Color(240, 248, 255));
+
+            contentStream.setFont(boldFont, 14);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin + 10, yPosition - 15);
+            contentStream.showText("Проект: " + (summary.getProjectName() != null ? summary.getProjectName() : ""));
+            contentStream.endText();
+            yPosition -= 25;
+
+            contentStream.setFont(font, 11);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin + 10, yPosition - 5);
+            contentStream.showText("Дата создания: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")));
+            contentStream.endText();
+            yPosition -= 20;
+
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin + 10, yPosition - 5);
+            contentStream.showText("Всего комнат: " + summary.getRoomCount() +
+                                 " | Общая площадь: " + String.format("%.2f м²", summary.getTotalArea()) +
+                                 " | Длина трубы: " + String.format("%.2f м", summary.getTotalPipeLength()));
+            contentStream.endText();
+            yPosition -= 50;
+
+            // Summary statistics
+            contentStream.setFont(boldFont, 14);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin, yPosition);
+            contentStream.showText("Общая сводка материалов");
+            contentStream.endText();
+            yPosition -= 20;
+
+            // Materials table header
+            drawTableHeader(contentStream, font, boldFont, margin, yPosition, contentWidth);
+            yPosition -= 25;
+
+            // Materials table rows
+            contentStream.setFont(font, 9);
+            for (MaterialSummary material : summary.getTotalMaterials()) {
+                if (yPosition < margin + 50) {
+                    contentStream.close();
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    contentStream = new PDPageContentStream(document, page);
+                    yPosition = yStart;
+                    drawTableHeader(contentStream, font, boldFont, margin, yPosition, contentWidth);
+                    yPosition -= 25;
+                    contentStream.setFont(font, 9);
+                }
+
+                drawMaterialRow(contentStream, margin, yPosition, contentWidth, material);
                 yPosition -= 20;
+            }
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Date: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
-                contentStream.endText();
-                yPosition -= 20;
+            yPosition -= 20;
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Total Rooms: " + summary.getRoomCount());
-                contentStream.endText();
-                yPosition -= 20;
+            // Detailed room information
+            contentStream.setFont(boldFont, 14);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin, yPosition);
+            contentStream.showText("Детальная информация по комнатам");
+            contentStream.endText();
+            yPosition -= 25;
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Total Area: " + String.format("%.2f", summary.getTotalArea()) + " m2");
-                contentStream.endText();
-                yPosition -= 20;
+            // Get detailed calculations for each room
+            for (CalculationResponse calc : summary.getCalculations()) {
+                if (yPosition < margin + 100) {
+                    contentStream.close();
+                    page = new PDPage(PDRectangle.A4);
+                    document.addPage(page);
+                    contentStream = new PDPageContentStream(document, page);
+                    yPosition = yStart;
+                }
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Total Pipe Length: " + String.format("%.2f", summary.getTotalPipeLength()) + " m");
-                contentStream.endText();
-                yPosition -= 30;
+                // Room header box
+                drawBox(contentStream, margin, yPosition - 50, contentWidth, 45, new Color(245, 245, 245));
 
-                // Materials header
-                contentStream.setFont(boldFont, 14);
+                contentStream.setFont(boldFont, 12);
                 contentStream.beginText();
-                contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Materials Summary");
+                contentStream.newLineAtOffset(margin + 10, yPosition - 15);
+                contentStream.showText("Комната: " + calc.getRoomName());
                 contentStream.endText();
                 yPosition -= 25;
 
-                // Table header
-                contentStream.setFont(boldFont, 10);
-                float col1 = margin;
-                float col2 = margin + 250;
-                float col3 = margin + 350;
-                float col4 = margin + 450;
-
+                contentStream.setFont(font, 10);
                 contentStream.beginText();
-                contentStream.newLineAtOffset(col1, yPosition);
-                contentStream.showText("Material Name");
+                contentStream.newLineAtOffset(margin + 10, yPosition - 5);
+                contentStream.showText(String.format("Размеры: %.2f × %.2f м | Площадь: %.2f м² | Длина трубы: %.2f м",
+                    calc.getRoomLength(), calc.getRoomWidth(), calc.getRoomArea(), calc.getPipeLength()));
                 contentStream.endText();
+                yPosition -= 35;
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(col2, yPosition);
-                contentStream.showText("Type");
-                contentStream.endText();
+                // Room materials
+                if (calc.getMaterialItems() != null && !calc.getMaterialItems().isEmpty()) {
+                    contentStream.setFont(boldFont, 10);
+                    contentStream.beginText();
+                    contentStream.newLineAtOffset(margin + 10, yPosition);
+                    contentStream.showText("Материалы:");
+                    contentStream.endText();
+                    yPosition -= 15;
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(col3, yPosition);
-                contentStream.showText("Quantity");
-                contentStream.endText();
+                    contentStream.setFont(font, 9);
+                    for (MaterialItemResponse item : calc.getMaterialItems()) {
+                        if (yPosition < margin + 30) {
+                            contentStream.close();
+                            page = new PDPage(PDRectangle.A4);
+                            document.addPage(page);
+                            contentStream = new PDPageContentStream(document, page);
+                            yPosition = yStart;
+                            contentStream.setFont(font, 9);
+                        }
 
-                contentStream.beginText();
-                contentStream.newLineAtOffset(col4, yPosition);
-                contentStream.showText("Unit");
-                contentStream.endText();
-
-                yPosition -= 5;
-
-                // Draw line under header
-                contentStream.setLineWidth(1);
-                contentStream.moveTo(margin, yPosition);
-                contentStream.lineTo(margin + tableWidth, yPosition);
-                contentStream.stroke();
-                yPosition -= 15;
-
-                // Table rows
-                contentStream.setFont(PDType1Font.HELVETICA, 9);
-                for (MaterialSummary material : summary.getTotalMaterials()) {
-                    if (yPosition < margin + 50) {
-                        // Need new page
-                        contentStream.close();
-                        page = new PDPage(PDRectangle.A4);
-                        document.addPage(page);
-                        PDPageContentStream newContentStream = new PDPageContentStream(document, page);
-                        yPosition = yStart;
-                        contentStream.close();
-                        return generateProjectSummaryPdf(projectId); // Regenerate with proper pagination
+                        contentStream.beginText();
+                        contentStream.newLineAtOffset(margin + 20, yPosition);
+                        contentStream.showText("• " + item.getMaterialName() +
+                                             ": " + String.format("%.2f", item.getQuantity()) +
+                                             " " + item.getUnit());
+                        contentStream.endText();
+                        yPosition -= 15;
                     }
-
-                    // Truncate long names to fit
-                    String name = toAscii(material.getMaterialName());
-                    if (name.length() > 35) {
-                        name = name.substring(0, 32) + "...";
-                    }
-
+                } else {
+                    contentStream.setFont(font, 10);
+                    contentStream.setNonStrokingColor(Color.GRAY);
                     contentStream.beginText();
-                    contentStream.newLineAtOffset(col1, yPosition);
-                    contentStream.showText(name);
+                    contentStream.newLineAtOffset(margin + 10, yPosition);
+                    contentStream.showText("(материалы не рассчитаны)");
                     contentStream.endText();
-
-                    contentStream.beginText();
-                    contentStream.newLineAtOffset(col2, yPosition);
-                    contentStream.showText(toAscii(material.getType()));
-                    contentStream.endText();
-
-                    contentStream.beginText();
-                    contentStream.newLineAtOffset(col3, yPosition);
-                    contentStream.showText(String.format("%.2f", material.getQuantity()));
-                    contentStream.endText();
-
-                    contentStream.beginText();
-                    contentStream.newLineAtOffset(col4, yPosition);
-                    contentStream.showText(toAscii(material.getUnit()));
-                    contentStream.endText();
-
+                    contentStream.setNonStrokingColor(Color.BLACK);
                     yPosition -= 15;
                 }
+
+                yPosition -= 15;
             }
+
+            // Footer
+            contentStream.setFont(font, 8);
+            contentStream.setNonStrokingColor(Color.GRAY);
+            contentStream.beginText();
+            contentStream.newLineAtOffset(margin, 30);
+            contentStream.showText("Сгенерировано: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss")));
+            contentStream.endText();
+            contentStream.setNonStrokingColor(Color.BLACK);
+
+            contentStream.close();
 
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             document.save(byteArrayOutputStream);
             return byteArrayOutputStream.toByteArray();
         }
+    }
+
+    private void drawBox(PDPageContentStream contentStream, float x, float y, float width, float height, Color color) throws IOException {
+        contentStream.setNonStrokingColor(color);
+        contentStream.addRect(x, y, width, height);
+        contentStream.fill();
+        contentStream.setNonStrokingColor(Color.BLACK);
+        contentStream.setStrokingColor(new Color(200, 200, 200));
+        contentStream.addRect(x, y, width, height);
+        contentStream.stroke();
+        contentStream.setStrokingColor(Color.BLACK);
+    }
+
+    private void drawTableHeader(PDPageContentStream contentStream, PDType0Font font, PDType0Font boldFont,
+                                 float margin, float yPosition, float contentWidth) throws IOException {
+        // Header background
+        drawBox(contentStream, margin, yPosition - 20, contentWidth, 20, new Color(70, 130, 180));
+
+        contentStream.setNonStrokingColor(Color.WHITE);
+        contentStream.setFont(boldFont, 10);
+
+        float col1 = margin + 5;
+        float col2 = margin + contentWidth * 0.5f;
+        float col3 = margin + contentWidth * 0.7f;
+        float col4 = margin + contentWidth * 0.85f;
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col1, yPosition - 15);
+        contentStream.showText("Материал");
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col2, yPosition - 15);
+        contentStream.showText("Тип");
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col3, yPosition - 15);
+        contentStream.showText("Количество");
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col4, yPosition - 15);
+        contentStream.showText("Ед. изм.");
+        contentStream.endText();
+
+        contentStream.setNonStrokingColor(Color.BLACK);
+    }
+
+    private void drawMaterialRow(PDPageContentStream contentStream, float margin, float yPosition,
+                                 float contentWidth, MaterialSummary material) throws IOException {
+        // Alternating row colors
+        drawBox(contentStream, margin, yPosition - 15, contentWidth, 15, new Color(250, 250, 250));
+
+        float col1 = margin + 5;
+        float col2 = margin + contentWidth * 0.5f;
+        float col3 = margin + contentWidth * 0.7f;
+        float col4 = margin + contentWidth * 0.85f;
+
+        String name = material.getMaterialName() != null ? material.getMaterialName() : "";
+        if (name.length() > 40) {
+            name = name.substring(0, 37) + "...";
+        }
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col1, yPosition - 10);
+        contentStream.showText(name);
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col2, yPosition - 10);
+        contentStream.showText(material.getType() != null ? material.getType() : "");
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col3, yPosition - 10);
+        contentStream.showText(String.format("%.2f", material.getQuantity()));
+        contentStream.endText();
+
+        contentStream.beginText();
+        contentStream.newLineAtOffset(col4, yPosition - 10);
+        contentStream.showText(material.getUnit() != null ? material.getUnit() : "");
+        contentStream.endText();
     }
 }
