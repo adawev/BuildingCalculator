@@ -10,6 +10,8 @@ import { createProject } from './store/reducers/project';
 import LandingPage from './pages/LandingPage/LandingPage';
 import CalculatorPage from './pages/CalculatorPage/CalculatorPage';
 import MultiRoomCalculator from './pages/MultiRoomCalculator/MultiRoomCalculator';
+import Materials from './pages/Materials/Materials';
+import History from './pages/History/History';
 
 function App() {
   const dispatch = useDispatch();
@@ -99,6 +101,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/calculator" element={<CalculatorPage />} />
           <Route path="/multi-room" element={<MultiRoomCalculator />} />
+          <Route path="/materials" element={<Materials />} />
+          <Route path="/history" element={<History />} />
         </Routes>
       </Router>
     </ThemeProvider>

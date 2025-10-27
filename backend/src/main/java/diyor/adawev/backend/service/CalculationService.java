@@ -52,6 +52,40 @@ public class CalculationService {
                 .toList();
     }
 
+    @Transactional
+    public CalculationResponse updateCalculation(Long id, CalculationRequest req) {
+        Calculation calc = calculationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Calculation not found"));
+
+        // Update room details
+        calc.setRoomName(req.getRoomName());
+        calc.setRoomLength(req.getRoomLength());
+        calc.setRoomWidth(req.getRoomWidth());
+
+        float area = req.getRoomLength() * req.getRoomWidth();
+        float pipeLength = area * 5f;
+        calc.setRoomArea(area);
+        calc.setPipeLength(pipeLength);
+
+        // Clear existing materials and recalculate if requested
+        if (req.getCalculatePrice() != null && req.getCalculatePrice()) {
+            calc.getMaterialItems().clear();
+            List<MaterialItemResponse> materials = calculateMaterials(calc, area, pipeLength);
+            calc = calculationRepository.save(calc);
+            return toResponse(calc, materials);
+        }
+
+        calc = calculationRepository.save(calc);
+        return toResponse(calc, toMaterialResponses(calc.getMaterialItems(), calc.getPipeLength()));
+    }
+
+    @Transactional
+    public void deleteCalculation(Long id) {
+        Calculation calc = calculationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Calculation not found"));
+        calculationRepository.delete(calc);
+    }
+
     private Project getProject(Long projectId) {
         return (projectId != null && projectId > 0)
                 ? projectRepository.findById(projectId).orElse(null)

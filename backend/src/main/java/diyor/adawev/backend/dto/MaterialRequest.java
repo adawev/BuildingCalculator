@@ -6,8 +6,7 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MaterialResponse {
-    private Long id;
+public class MaterialRequest {
     private String name;
     private String type;
     private String unit;

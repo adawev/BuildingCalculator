@@ -29,4 +29,15 @@ public class CalculationController {
     public ResponseEntity<List<CalculationResponse>> getCalculationsByProject(@PathVariable Long projectId) {
         return ResponseEntity.ok(calculationService.getCalculationsByProject(projectId));
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CalculationResponse> updateCalculation(@PathVariable Long id, @RequestBody CalculationRequest request) {
+        return ResponseEntity.ok(calculationService.updateCalculation(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteCalculation(@PathVariable Long id) {
+        calculationService.deleteCalculation(id);
+        return ResponseEntity.noContent().build();
+    }
 }

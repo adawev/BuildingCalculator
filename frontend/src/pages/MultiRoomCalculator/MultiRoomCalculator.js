@@ -25,10 +25,15 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HomeIcon from '@mui/icons-material/Home';
 import logo from '../../features/images/logo.png';
@@ -46,10 +51,22 @@ const MultiRoomCalculator = () => {
     width: '',
   });
   const [loading, setLoading] = useState(false);
+  const [calculating, setCalculating] = useState(false);
   const [summary, setSummary] = useState(null);
+  const [editDialog, setEditDialog] = useState({ open: false, room: null });
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, roomId: null, roomName: '' });
+  const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const summaryTimeoutRef = useRef(null);
 
-  // Debounced summary loader - wait 500ms after last change
+  const showNotification = (message, severity = 'success') => {
+    setNotification({ open: true, message, severity });
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  // Debounced summary loader
   const loadSummaryDebounced = useCallback((pId) => {
     if (summaryTimeoutRef.current) {
       clearTimeout(summaryTimeoutRef.current);
@@ -79,44 +96,125 @@ const MultiRoomCalculator = () => {
           setProjectId(pId);
         }
 
-        // Add calculation for this room - skip materials in response
+        // Add calculation WITHOUT materials (calculatePrice: false)
         const calcResp = await axios.post(`${API_URL}/calculations`, {
           roomName: currentRoom.name,
           roomLength: parseFloat(currentRoom.length),
           roomWidth: parseFloat(currentRoom.width),
           projectId: pId,
-          calculatePrice: true,
+          calculatePrice: false, // Don't calculate materials yet
         });
 
-        // Add room to local state (without materials to save memory)
+        // Add room to local state
         const roomBasicInfo = {
           id: calcResp.data.id,
           roomName: calcResp.data.roomName,
+          roomLength: calcResp.data.roomLength,
+          roomWidth: calcResp.data.roomWidth,
           roomArea: calcResp.data.roomArea,
           pipeLengthWithReserve: calcResp.data.pipeLengthWithReserve,
         };
         setRooms([...rooms, roomBasicInfo]);
         setCurrentRoom({ name: '', length: '', width: '' });
-
-        // Load summary with debounce (aggregated materials from server)
-        loadSummaryDebounced(pId);
+        showNotification('Комната добавлена успешно!', 'success');
       } catch (error) {
         console.error('Error adding room:', error);
-        alert('Ошибка при добавлении комнаты');
+        showNotification('Ошибка при добавлении комнаты', 'error');
       } finally {
         setLoading(false);
       }
     }
   };
 
-  const handleDeleteRoom = async (roomId, index) => {
+  const handleCalculateAll = async () => {
+    if (!projectId || rooms.length === 0) return;
+
     try {
-      setRooms(rooms.filter((_, i) => i !== index));
+      setCalculating(true);
+
+      // Update each calculation with calculatePrice: true
+      for (const room of rooms) {
+        await axios.put(`${API_URL}/calculations/${room.id}`, {
+          roomName: room.roomName,
+          roomLength: room.roomLength,
+          roomWidth: room.roomWidth,
+          calculatePrice: true,
+        });
+      }
+
+      // Load summary after all calculations
+      await loadSummary(projectId);
+      showNotification('Расчет материалов завершен!', 'success');
+    } catch (error) {
+      console.error('Error calculating:', error);
+      showNotification('Ошибка при расчете материалов', 'error');
+    } finally {
+      setCalculating(false);
+    }
+  };
+
+  const handleEditRoom = (room) => {
+    setEditDialog({
+      open: true,
+      room: { ...room },
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editDialog.room) return;
+
+    try {
+      setLoading(true);
+      const updatedRoom = editDialog.room;
+
+      // Update calculation (without recalculating materials)
+      const calcResp = await axios.put(`${API_URL}/calculations/${updatedRoom.id}`, {
+        roomName: updatedRoom.roomName,
+        roomLength: parseFloat(updatedRoom.roomLength),
+        roomWidth: parseFloat(updatedRoom.roomWidth),
+        calculatePrice: false,
+      });
+
+      // Update local state
+      const updatedRooms = rooms.map((r) =>
+        r.id === updatedRoom.id
+          ? {
+              id: calcResp.data.id,
+              roomName: calcResp.data.roomName,
+              roomLength: calcResp.data.roomLength,
+              roomWidth: calcResp.data.roomWidth,
+              roomArea: calcResp.data.roomArea,
+              pipeLengthWithReserve: calcResp.data.pipeLengthWithReserve,
+            }
+          : r
+      );
+      setRooms(updatedRooms);
+      setEditDialog({ open: false, room: null });
+      showNotification('Комната обновлена успешно!', 'success');
+    } catch (error) {
+      console.error('Error updating room:', error);
+      showNotification('Ошибка при обновлении комнаты', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteRoom = (room) => {
+    setDeleteDialog({ open: true, roomId: room.id, roomName: room.roomName });
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await axios.delete(`${API_URL}/calculations/${deleteDialog.roomId}`);
+      setRooms(rooms.filter((r) => r.id !== deleteDialog.roomId));
+      setDeleteDialog({ open: false, roomId: null, roomName: '' });
       if (projectId) {
         loadSummaryDebounced(projectId);
       }
+      showNotification('Комната удалена успешно!', 'success');
     } catch (error) {
       console.error('Error deleting room:', error);
+      showNotification('Ошибка при удалении комнаты', 'error');
     }
   };
 
@@ -227,7 +325,7 @@ const MultiRoomCalculator = () => {
               ) : (
                 <List sx={{ maxHeight: '400px', overflow: 'auto' }}>
                   {rooms.map((room, index) => (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={room.id}>
                       <ListItem sx={{ px: 0 }}>
                         <ListItemText
                           primary={
@@ -245,7 +343,16 @@ const MultiRoomCalculator = () => {
                           <IconButton
                             edge="end"
                             size="small"
-                            onClick={() => handleDeleteRoom(room.id, index)}
+                            onClick={() => handleEditRoom(room)}
+                            color="primary"
+                            sx={{ mr: 1 }}
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            edge="end"
+                            size="small"
+                            onClick={() => handleDeleteRoom(room)}
                             color="error"
                           >
                             <DeleteIcon fontSize="small" />
@@ -278,7 +385,7 @@ const MultiRoomCalculator = () => {
             </Paper>
           </Grid>
 
-          {/* Right Column - Materials */}
+          {/* Right Column - Materials or Calculate Button */}
           <Grid item xs={12} md={8}>
             {summary && summary.totalMaterials && summary.totalMaterials.length > 0 ? (
               <Paper sx={{ p: 3 }}>
@@ -376,16 +483,127 @@ const MultiRoomCalculator = () => {
               <Paper sx={{ p: 6, textAlign: 'center', color: 'text.secondary' }}>
                 <CalculateIcon sx={{ fontSize: 80, mb: 2, opacity: 0.2 }} />
                 <Typography variant="h6" sx={{ mb: 1 }}>
-                  Добавьте комнаты
+                  {rooms.length > 0 ? 'Нажмите "Рассчитать"' : 'Добавьте комнаты'}
                 </Typography>
-                <Typography variant="body2">
-                  Начните добавлять комнаты слева для расчета материалов
+                <Typography variant="body2" sx={{ mb: 3 }}>
+                  {rooms.length > 0
+                    ? 'Чтобы рассчитать необходимые материалы для всех комнат'
+                    : 'Начните добавлять комнаты слева для расчета материалов'}
                 </Typography>
+                {rooms.length > 0 && (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={calculating ? <CircularProgress size={20} color="inherit" /> : <CalculateIcon />}
+                    onClick={handleCalculateAll}
+                    disabled={calculating}
+                    sx={{ py: 2, px: 6 }}
+                  >
+                    {calculating ? 'Расчет...' : 'Рассчитать материалы'}
+                  </Button>
+                )}
               </Paper>
+            )}
+
+            {/* Calculate Button at Bottom (if materials exist) */}
+            {summary && summary.totalMaterials && summary.totalMaterials.length > 0 && (
+              <Box sx={{ mt: 3, textAlign: 'center' }}>
+                <Button
+                  variant="outlined"
+                  size="large"
+                  startIcon={calculating ? <CircularProgress size={20} /> : <CalculateIcon />}
+                  onClick={handleCalculateAll}
+                  disabled={calculating}
+                  sx={{ py: 1.5, px: 4 }}
+                >
+                  {calculating ? 'Пересчитываю...' : 'Пересчитать материалы'}
+                </Button>
+              </Box>
             )}
           </Grid>
         </Grid>
 
+        {/* Edit Room Dialog */}
+        <Dialog open={editDialog.open} onClose={() => setEditDialog({ open: false, room: null })} maxWidth="sm" fullWidth>
+          <DialogTitle>Редактировать комнату</DialogTitle>
+          <DialogContent>
+            <Box sx={{ pt: 2 }}>
+              <TextField
+                fullWidth
+                label="Название комнаты"
+                value={editDialog.room?.roomName || ''}
+                onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomName: e.target.value } })}
+                sx={{ mb: 2 }}
+              />
+              <Grid container spacing={2}>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Длина (м)"
+                    value={editDialog.room?.roomLength || ''}
+                    onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomLength: e.target.value } })}
+                    inputProps={{ min: 0.1, step: 0.1 }}
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label="Ширина (м)"
+                    value={editDialog.room?.roomWidth || ''}
+                    onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomWidth: e.target.value } })}
+                    inputProps={{ min: 0.1, step: 0.1 }}
+                  />
+                </Grid>
+              </Grid>
+              {editDialog.room?.roomLength && editDialog.room?.roomWidth && (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                  Площадь: <strong>{(parseFloat(editDialog.room.roomLength) * parseFloat(editDialog.room.roomWidth)).toFixed(2)} м²</strong>
+                </Alert>
+              )}
+            </Box>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setEditDialog({ open: false, room: null })}>Отмена</Button>
+            <Button onClick={handleSaveEdit} variant="contained" disabled={loading}>
+              {loading ? 'Сохранение...' : 'Сохранить'}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, roomId: null, roomName: '' })} maxWidth="xs" fullWidth>
+          <DialogTitle>Удалить комнату?</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Вы уверены, что хотите удалить комнату <strong>"{deleteDialog.roomName}"</strong>?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Это действие нельзя отменить.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialog({ open: false, roomId: null, roomName: '' })}>
+              Отмена
+            </Button>
+            <Button onClick={confirmDelete} variant="contained" color="error">
+              Удалить
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar Notification */}
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={4000}
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
