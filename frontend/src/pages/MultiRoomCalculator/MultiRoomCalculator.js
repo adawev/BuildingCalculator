@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import {
@@ -47,6 +47,22 @@ const MultiRoomCalculator = () => {
   });
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
+  const summaryTimeoutRef = useRef(null);
+
+  // Debounced summary loader - wait 500ms after last change
+  const loadSummaryDebounced = useCallback((pId) => {
+    if (summaryTimeoutRef.current) {
+      clearTimeout(summaryTimeoutRef.current);
+    }
+    summaryTimeoutRef.current = setTimeout(async () => {
+      try {
+        const summaryResp = await axios.get(`${API_URL}/projects/${pId}/summary`);
+        setSummary(summaryResp.data);
+      } catch (error) {
+        console.error('Error loading summary:', error);
+      }
+    }, 500);
+  }, []);
 
   const handleAddRoom = async () => {
     if (currentRoom.name && currentRoom.length && currentRoom.width) {
@@ -63,7 +79,7 @@ const MultiRoomCalculator = () => {
           setProjectId(pId);
         }
 
-        // Add calculation for this room
+        // Add calculation for this room - skip materials in response
         const calcResp = await axios.post(`${API_URL}/calculations`, {
           roomName: currentRoom.name,
           roomLength: parseFloat(currentRoom.length),
@@ -72,11 +88,18 @@ const MultiRoomCalculator = () => {
           calculatePrice: true,
         });
 
-        setRooms([...rooms, calcResp.data]);
+        // Add room to local state (without materials to save memory)
+        const roomBasicInfo = {
+          id: calcResp.data.id,
+          roomName: calcResp.data.roomName,
+          roomArea: calcResp.data.roomArea,
+          pipeLengthWithReserve: calcResp.data.pipeLengthWithReserve,
+        };
+        setRooms([...rooms, roomBasicInfo]);
         setCurrentRoom({ name: '', length: '', width: '' });
 
-        // Get updated summary
-        await loadSummary(pId);
+        // Load summary with debounce (aggregated materials from server)
+        loadSummaryDebounced(pId);
       } catch (error) {
         console.error('Error adding room:', error);
         alert('Ошибка при добавлении комнаты');
@@ -90,7 +113,7 @@ const MultiRoomCalculator = () => {
     try {
       setRooms(rooms.filter((_, i) => i !== index));
       if (projectId) {
-        await loadSummary(projectId);
+        loadSummaryDebounced(projectId);
       }
     } catch (error) {
       console.error('Error deleting room:', error);

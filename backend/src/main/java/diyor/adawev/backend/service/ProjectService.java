@@ -97,15 +97,23 @@ public class ProjectService {
                     .pipeLength(calc.getPipeLength())
                     .build());
 
+            // Calculate KollektorInfo for proper KOLLEKTOR name formatting
+            int totalPairs = (int) Math.ceil(calc.getPipeLength() / 32f);
+            KollektorInfo kollektorInfo = calculateKollektors(totalPairs);
+
             for (MaterialItem item : calc.getMaterialItems()) {
-                String key = item.getMaterialType();
+                String displayName = getDisplayName(item, kollektorInfo);
+                String key = item.getMaterialType().equals("KOLLEKTOR") || item.getMaterialType().equals("KOLLEKTOR2")
+                        ? displayName // Use display name as key for kollektors to keep sizes separate
+                        : item.getMaterialType();
+
                 MaterialSummary existing = materialMap.get(key);
 
                 if (existing != null) {
                     existing.setQuantity(existing.getQuantity() + item.getQuantity());
                 } else {
                     materialMap.put(key, MaterialSummary.builder()
-                            .materialName(item.getMaterialName())
+                            .materialName(displayName)
                             .quantity(item.getQuantity())
                             .unit(item.getUnit())
                             .type(item.getMaterialType())
@@ -126,6 +134,47 @@ public class ProjectService {
                 .totalMaterials(totalMaterials)
                 .rooms(rooms)
                 .build();
+    }
+
+    private String getDisplayName(MaterialItem item, KollektorInfo kollektorInfo) {
+        if ("KOLLEKTOR".equals(item.getMaterialType()) && kollektorInfo.firstCount > 0) {
+            return String.format("%s %dконтур", item.getMaterialName(), kollektorInfo.firstSize);
+        } else if ("KOLLEKTOR2".equals(item.getMaterialType()) && kollektorInfo.secondCount > 0) {
+            return String.format("%s %dконтур", item.getMaterialName(), kollektorInfo.secondSize);
+        }
+        return item.getMaterialName();
+    }
+
+    private KollektorInfo calculateKollektors(int totalPairs) {
+        KollektorInfo info = new KollektorInfo();
+
+        if (totalPairs <= 12) {
+            info.firstSize = Math.max(totalPairs, 2);
+            info.firstCount = 1;
+            info.secondSize = 0;
+            info.secondCount = 0;
+        } else {
+            info.firstSize = 12;
+            info.firstCount = totalPairs / 12;
+
+            int remaining = totalPairs % 12;
+            if (remaining > 0) {
+                info.secondSize = Math.max(remaining, 2);
+                info.secondCount = 1;
+            } else {
+                info.secondSize = 0;
+                info.secondCount = 0;
+            }
+        }
+
+        return info;
+    }
+
+    private static class KollektorInfo {
+        int firstSize;
+        int firstCount;
+        int secondSize;
+        int secondCount;
     }
 
     private ProjectResponse mapToResponse(Project project) {

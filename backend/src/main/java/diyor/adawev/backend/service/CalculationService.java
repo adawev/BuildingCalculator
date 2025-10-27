@@ -42,13 +42,13 @@ public class CalculationService {
     public CalculationResponse getCalculation(Long id) {
         Calculation calc = calculationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Calculation not found"));
-        return toResponse(calc, toMaterialResponses(calc.getMaterialItems()));
+        return toResponse(calc, toMaterialResponses(calc.getMaterialItems(), calc.getPipeLength()));
     }
 
     public List<CalculationResponse> getCalculationsByProject(Long projectId) {
         return calculationRepository.findByProjectIdOrderByCreatedAtDesc(projectId)
                 .stream()
-                .map(c -> toResponse(c, toMaterialResponses(c.getMaterialItems())))
+                .map(c -> toResponse(c, toMaterialResponses(c.getMaterialItems(), c.getPipeLength())))
                 .toList();
     }
 
@@ -179,15 +179,12 @@ public class CalculationService {
                 .build();
     }
 
-    private List<MaterialItemResponse> toMaterialResponses(List<MaterialItem> items) {
+    private List<MaterialItemResponse> toMaterialResponses(List<MaterialItem> items, float pipeLength) {
+        int totalPairs = (int) Math.ceil(pipeLength / 32f);
+        KollektorInfo kollektorInfo = calculateKollektors(totalPairs);
+
         return items.stream()
-                .map(i -> MaterialItemResponse.builder()
-                        .materialName(i.getMaterialName())
-                        .quantity(i.getQuantity())
-                        .unit(i.getUnit())
-                        .originalName(i.getMaterialName())
-                        .type(i.getMaterialType())
-                        .build())
+                .map(i -> toMaterialResponse(i, kollektorInfo))
                 .toList();
     }
 }
