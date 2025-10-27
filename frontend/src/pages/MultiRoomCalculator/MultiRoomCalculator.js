@@ -37,6 +37,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HomeIcon from '@mui/icons-material/Home';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import logo from '../../features/images/logo.png';
 
 const API_URL = 'http://localhost:8080/api';
@@ -335,10 +336,10 @@ const MultiRoomCalculator = () => {
           </Typography>
           <Button
             variant="outlined"
-            startIcon={<HomeIcon />}
+            startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/')}
           >
-            Главная
+            Назад
           </Button>
           <Button
             variant="contained"
