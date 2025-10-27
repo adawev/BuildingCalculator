@@ -360,16 +360,13 @@ const History = () => {
                     <TableRow>
                       <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white', width: 50 }} />
                       <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
-                        Комната
+                        Проект
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                        Комнаты
                       </TableCell>
                       <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
                         Площадь
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
-                        Труба
-                      </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
-                        Размеры
                       </TableCell>
                       <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
                         Статус
@@ -377,18 +374,27 @@ const History = () => {
                       <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
                         Дата
                       </TableCell>
+                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }} align="right">
+                        Действия
+                      </TableCell>
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {paginatedCalculations.length > 0 ? (
-                      paginatedCalculations.map((calculation) => (
-                        <HistoryRow key={calculation.id} calculation={calculation} />
+                    {paginatedProjects.length > 0 ? (
+                      paginatedProjects.map((project) => (
+                        <ProjectRow
+                          key={project.id}
+                          project={project}
+                          calculations={projectCalculations[project.id] || []}
+                          onDelete={handleDeleteProject}
+                          onDownloadPdf={handleDownloadPdf}
+                        />
                       ))
                     ) : (
                       <TableRow>
                         <TableCell colSpan={7} align="center" sx={{ py: 10 }}>
                           <Typography variant="body1" color="text.secondary">
-                            {searchQuery ? 'Ничего не найдено' : 'История расчетов пуста'}
+                            {searchQuery ? 'Ничего не найдено' : 'История проектов пуста'}
                           </Typography>
                         </TableCell>
                       </TableRow>
@@ -399,7 +405,7 @@ const History = () => {
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25, 50]}
                 component="div"
-                count={filteredCalculations.length}
+                count={filteredProjects.length}
                 rowsPerPage={rowsPerPage}
                 page={page}
                 onPageChange={handleChangePage}
@@ -410,6 +416,44 @@ const History = () => {
             </>
           )}
         </Paper>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialog.open}
+          onClose={() => setDeleteDialog({ open: false, project: null })}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Удалить проект?</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Вы уверены, что хотите удалить проект <strong>"{deleteDialog.project?.name}"</strong>?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Все расчеты и материалы будут также удалены. Это действие нельзя отменить.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialog({ open: false, project: null })}>
+              Отмена
+            </Button>
+            <Button onClick={confirmDelete} variant="contained" color="error">
+              Удалить
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Snackbar Notification */}
+        <Snackbar
+          open={notification.open}
+          autoHideDuration={4000}
+          onClose={handleCloseNotification}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        >
+          <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
+            {notification.message}
+          </Alert>
+        </Snackbar>
       </Container>
     </Box>
   );
