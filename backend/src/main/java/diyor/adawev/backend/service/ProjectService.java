@@ -125,6 +125,11 @@ public class ProjectService {
         List<MaterialSummary> totalMaterials = new ArrayList<>(materialMap.values());
         totalMaterials.sort(Comparator.comparing(MaterialSummary::getType));
 
+        // Convert Calculation entities to CalculationResponse DTOs for PDF
+        List<CalculationResponse> calculationResponses = calculations.stream()
+                .map(this::convertToCalculationResponse)
+                .collect(java.util.stream.Collectors.toList());
+
         return ProjectSummaryResponse.builder()
                 .projectId(project.getId())
                 .projectName(project.getName())
@@ -133,6 +138,7 @@ public class ProjectService {
                 .totalPipeLength(totalPipeLength)
                 .totalMaterials(totalMaterials)
                 .rooms(rooms)
+                .calculations(calculationResponses)
                 .build();
     }
 
@@ -175,6 +181,28 @@ public class ProjectService {
         int firstCount;
         int secondSize;
         int secondCount;
+    }
+
+    private CalculationResponse convertToCalculationResponse(Calculation calculation) {
+        List<MaterialItemResponse> materialItems = calculation.getMaterialItems().stream()
+                .map(item -> MaterialItemResponse.builder()
+                        .materialName(item.getMaterialName())
+                        .type(item.getMaterialType())
+                        .quantity(item.getQuantity())
+                        .unit(item.getUnit())
+                        .build())
+                .collect(java.util.stream.Collectors.toList());
+
+        return CalculationResponse.builder()
+                .id(calculation.getId())
+                .roomName(calculation.getRoomName())
+                .roomLength(calculation.getRoomLength())
+                .roomWidth(calculation.getRoomWidth())
+                .roomArea(calculation.getRoomArea())
+                .pipeLength(calculation.getPipeLength())
+                .pipeLengthWithReserve(calculation.getPipeLength() * 1.1f)
+                .materials(materialItems)
+                .build();
     }
 
     private ProjectResponse mapToResponse(Project project) {

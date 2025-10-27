@@ -15,4 +15,5 @@ public class ProjectSummaryResponse {
     private Float totalPipeLength;
     private List<MaterialSummary> totalMaterials;
     private List<RoomSummary> rooms;
+    private List<CalculationResponse> calculations;  // For PDF generation
 }

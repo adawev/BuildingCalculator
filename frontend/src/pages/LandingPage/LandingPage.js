@@ -28,13 +28,6 @@ const LandingPage = () => {
       path: '/multi-room',
     },
     {
-      title: 'Одна комната',
-      description: 'Быстрый расчет для одной комнаты',
-      icon: <HomeIcon sx={{ fontSize: 60 }} />,
-      color: '#3b82f6',
-      path: '/calculator',
-    },
-    {
       title: 'Материалы',
       description: 'Управление базой материалов',
       icon: <BuildIcon sx={{ fontSize: 60 }} />,

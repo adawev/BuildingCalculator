@@ -13,6 +13,12 @@ public class CalculationResponse {
     private Float roomLength;
     private Float roomWidth;
     private Float roomArea;
+    private Float pipeLength;  // For PDF - actual pipe length
     private Float pipeLengthWithReserve;
     private List<MaterialItemResponse> materials;
+
+    // Alias for PDF compatibility
+    public List<MaterialItemResponse> getMaterialItems() {
+        return materials;
+    }
 }
