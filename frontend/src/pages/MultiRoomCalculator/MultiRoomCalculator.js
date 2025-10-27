@@ -36,6 +36,8 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import HomeIcon from '@mui/icons-material/Home';
+import SaveIcon from '@mui/icons-material/Save';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import logo from '../../features/images/logo.png';
 
 const API_URL = 'http://localhost:8080/api';
@@ -55,7 +57,9 @@ const MultiRoomCalculator = () => {
   const [summary, setSummary] = useState(null);
   const [editDialog, setEditDialog] = useState({ open: false, room: null });
   const [deleteDialog, setDeleteDialog] = useState({ open: false, roomId: null, roomName: '' });
+  const [deleteProjectDialog, setDeleteProjectDialog] = useState(false);
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const summaryTimeoutRef = useRef(null);
 
   const showNotification = (message, severity = 'success') => {
@@ -153,6 +157,68 @@ const MultiRoomCalculator = () => {
     }
   };
 
+  const handleDownloadPdf = async () => {
+    if (!projectId) {
+      showNotification('Avval xonalarni hisoblang', 'warning');
+      return;
+    }
+
+    try {
+      const response = await axios.get(`${API_URL}/projects/${projectId}/summary/pdf`, {
+        responseType: 'blob',
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${projectName}_summary.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+
+      showNotification('PDF muvaffaqiyatli yuklandi!', 'success');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      showNotification('PDF yuklashda xatolik', 'error');
+    }
+  };
+
+  const handleSaveProject = async () => {
+    if (!projectId) return;
+
+    try {
+      await axios.put(`${API_URL}/projects/${projectId}`, {
+        name: projectName,
+        status: 'DRAFT',
+      });
+      setHasUnsavedChanges(false);
+      showNotification('Project saqlandi!', 'success');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      showNotification('Project saqlashda xatolik', 'error');
+    }
+  };
+
+  const handleDeleteProject = async () => {
+    if (!projectId) return;
+
+    try {
+      await axios.delete(`${API_URL}/projects/${projectId}`);
+      setDeleteProjectDialog(false);
+      showNotification('Project o\'chirildi!', 'success');
+      // Reset state
+      setProjectId(null);
+      setRooms([]);
+      setSummary(null);
+      setProjectName('Мой дом');
+      setHasUnsavedChanges(false);
+    } catch (error) {
+      console.error('Error deleting project:', error);
+      showNotification('Project o\'chirishda xatolik', 'error');
+    }
+  };
+
   const handleEditRoom = (room) => {
     setEditDialog({
       open: true,
@@ -231,11 +297,45 @@ const MultiRoomCalculator = () => {
     <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
       <Container maxWidth="lg">
         {/* Header with logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
           <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '16px' }} />
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
             Расчет для всего дома
           </Typography>
+          <Button
+            variant="outlined"
+            startIcon={<HomeIcon />}
+            onClick={() => navigate('/')}
+          >
+            Главная
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<PictureAsPdfIcon />}
+            onClick={handleDownloadPdf}
+            disabled={!summary || summary.totalMaterials?.length === 0}
+          >
+            PDF
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<SaveIcon />}
+            onClick={handleSaveProject}
+            disabled={!hasUnsavedChanges || !projectId}
+          >
+            Saqlash
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            startIcon={<DeleteIcon />}
+            onClick={() => setDeleteProjectDialog(true)}
+            disabled={!projectId}
+          >
+            O'chirish
+          </Button>
         </Box>
 
         {/* Project Name */}
@@ -244,7 +344,10 @@ const MultiRoomCalculator = () => {
             fullWidth
             label="Название проекта"
             value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
+            onChange={(e) => {
+              setProjectName(e.target.value);
+              if (projectId) setHasUnsavedChanges(true);
+            }}
             disabled={projectId !== null}
             variant="outlined"
             sx={{ mb: 0 }}
@@ -589,6 +692,32 @@ const MultiRoomCalculator = () => {
             </Button>
             <Button onClick={confirmDelete} variant="contained" color="error">
               Удалить
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Delete Project Dialog */}
+        <Dialog
+          open={deleteProjectDialog}
+          onClose={() => setDeleteProjectDialog(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle>Project'ni o'chirish?</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Project <strong>"{projectName}"</strong> ni o'chirishni xohlaysizmi?
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Barcha xonalar va hisob-kitoblar ham o'chadi. Bu amalni qaytarib bo'lmaydi.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteProjectDialog(false)}>
+              Bekor qilish
+            </Button>
+            <Button onClick={handleDeleteProject} variant="contained" color="error">
+              O'chirish
             </Button>
           </DialogActions>
         </Dialog>

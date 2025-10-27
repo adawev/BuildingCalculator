@@ -7,11 +7,12 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -20,16 +21,25 @@ import java.time.format.DateTimeFormatter;
 public class PdfService {
     private final ProjectService projectService;
 
-    private String toAscii(String text) {
-        if (text == null) return "";
-        // Replace Cyrillic and other non-ASCII characters with transliteration or remove them
-        return text.replaceAll("[^\\x00-\\x7F]", "?");
-    }
-
     public byte[] generateProjectSummaryPdf(Long projectId) throws IOException {
         ProjectSummaryResponse summary = projectService.getProjectSummary(projectId);
 
         try (PDDocument document = new PDDocument()) {
+            // Load a font that supports Cyrillic characters
+            InputStream fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans.ttf");
+            PDType0Font font;
+            PDType0Font boldFont;
+
+            if (fontStream != null) {
+                font = PDType0Font.load(document, fontStream);
+                fontStream = getClass().getResourceAsStream("/fonts/DejaVuSans-Bold.ttf");
+                boldFont = fontStream != null ? PDType0Font.load(document, fontStream) : font;
+            } else {
+                // Fallback to system font
+                font = PDType0Font.load(document, getClass().getResourceAsStream("/fonts/FreeSans.ttf"));
+                boldFont = font;
+            }
+
             PDPage page = new PDPage(PDRectangle.A4);
             document.addPage(page);
 
@@ -39,8 +49,8 @@ public class PdfService {
                 float yPosition = yStart;
                 float tableWidth = page.getMediaBox().getWidth() - 2 * margin;
 
-                // Use standard font that supports basic Latin characters
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 18);
+                // Use TrueType font that supports Cyrillic
+                contentStream.setFont(boldFont, 18);
 
                 // Title
                 String title = "Project Summary #" + projectId;
@@ -51,10 +61,10 @@ public class PdfService {
                 yPosition -= 30;
 
                 // Project info
-                contentStream.setFont(PDType1Font.HELVETICA, 12);
+                contentStream.setFont(font, 12);
                 contentStream.beginText();
                 contentStream.newLineAtOffset(margin, yPosition);
-                contentStream.showText("Project: " + toAscii(summary.getProjectName()));
+                contentStream.showText("Project: " + (summary.getProjectName() != null ? summary.getProjectName() : ""));
                 contentStream.endText();
                 yPosition -= 20;
 
@@ -83,7 +93,7 @@ public class PdfService {
                 yPosition -= 30;
 
                 // Materials header
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 14);
+                contentStream.setFont(boldFont, 14);
                 contentStream.beginText();
                 contentStream.newLineAtOffset(margin, yPosition);
                 contentStream.showText("Materials Summary");
@@ -91,7 +101,7 @@ public class PdfService {
                 yPosition -= 25;
 
                 // Table header
-                contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
+                contentStream.setFont(boldFont, 10);
                 float col1 = margin;
                 float col2 = margin + 250;
                 float col3 = margin + 350;

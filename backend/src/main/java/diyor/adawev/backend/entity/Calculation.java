@@ -29,7 +29,7 @@ public class Calculation {
     private Float pipeLength;
 
     @Builder.Default
-    @OneToMany(mappedBy = "calculation", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "calculation", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MaterialItem> materialItems = new ArrayList<>();
 
     @CreationTimestamp
