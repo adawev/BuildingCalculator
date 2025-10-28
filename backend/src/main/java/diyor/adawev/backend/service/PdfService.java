@@ -206,9 +206,9 @@ public class PdfService {
             float qtyColWidth = tableWidth * 0.25f;
             float unitColWidth = tableWidth * 0.15f;
 
-            float col1X = margin;
-            float col2X = margin + nameColWidth;
-            float col3X = margin + nameColWidth + qtyColWidth;
+            col1X = margin;
+            col2X = margin + nameColWidth;
+            col3X = margin + nameColWidth + qtyColWidth;
 
             // Table header
             contentStream.setNonStrokingColor(new Color(240, 240, 240));
