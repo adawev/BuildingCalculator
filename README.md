@@ -1,7 +1,6 @@
 <div align="center">
   <img src="logo.png" alt="UstaBek Logo" width="200"/>
 
-  # UstaBek
   ### Калькулятор Теплого Пола | Underfloor Heating Calculator
 
   *Professional material calculator for underfloor heating systems*
