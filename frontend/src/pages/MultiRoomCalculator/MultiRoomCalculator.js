@@ -45,7 +45,7 @@ const API_URL = 'http://localhost:8080/api';
 const MultiRoomCalculator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [projectName, setProjectName] = useState('Мой дом');
+  const [projectName, setProjectName] = useState('Проект #1');
   const [projectId, setProjectId] = useState(null);
   const [rooms, setRooms] = useState([]);
   const [currentRoom, setCurrentRoom] = useState({
@@ -62,12 +62,37 @@ const MultiRoomCalculator = () => {
   const [notification, setNotification] = useState({ open: false, message: '', severity: 'success' });
   const summaryTimeoutRef = useRef(null);
 
-  // Load project if projectId is provided in URL
+  // Load project from URL or fetch next project number
   useEffect(() => {
+    const fetchNextProjectNumber = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/projects`);
+        const projects = response.data;
+        // Find the highest project number
+        let maxNumber = 0;
+        projects.forEach(project => {
+          const match = project.name.match(/Проект #(\d+)/);
+          if (match) {
+            const num = parseInt(match[1]);
+            if (num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        });
+        setProjectName(`Проект #${maxNumber + 1}`);
+      } catch (error) {
+        console.error('Error fetching projects:', error);
+        setProjectName('Проект #1');
+      }
+    };
+
     const projectIdFromUrl = searchParams.get('projectId');
     if (projectIdFromUrl) {
       loadProject(projectIdFromUrl);
+    } else {
+      fetchNextProjectNumber();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const showNotification = (message, severity = 'success') => {
@@ -244,7 +269,25 @@ const MultiRoomCalculator = () => {
       setProjectId(null);
       setRooms([]);
       setSummary(null);
-      setProjectName('Мой дом');
+
+      // Fetch next project number
+      try {
+        const response = await axios.get(`${API_URL}/projects`);
+        const projects = response.data;
+        let maxNumber = 0;
+        projects.forEach(project => {
+          const match = project.name.match(/Проект #(\d+)/);
+          if (match) {
+            const num = parseInt(match[1]);
+            if (num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        });
+        setProjectName(`Проект #${maxNumber + 1}`);
+      } catch (error) {
+        setProjectName('Проект #1');
+      }
     } catch (error) {
       console.error('Error deleting project:', error);
       showNotification('Project o\'chirishda xatolik', 'error');
@@ -330,7 +373,7 @@ const MultiRoomCalculator = () => {
       <Container maxWidth="lg">
         {/* Header with logo */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
-          <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '16px' }} />
+          <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
             Расчет для всего дома
           </Typography>
@@ -363,26 +406,14 @@ const MultiRoomCalculator = () => {
 
         {/* Project Name */}
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-            <TextField
-              fullWidth
-              label="Название проекта"
-              value={projectName}
-              onChange={(e) => setProjectName(e.target.value)}
-              variant="outlined"
-              sx={{ mb: 0 }}
-            />
-            {projectId && (
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleUpdateProjectName}
-                sx={{ minWidth: '120px', height: '56px' }}
-              >
-                Сохранить имя
-              </Button>
-            )}
-          </Box>
+          <TextField
+            fullWidth
+            label="Название проекта"
+            value={projectName}
+            onChange={(e) => setProjectName(e.target.value)}
+            onBlur={handleUpdateProjectName}
+            variant="outlined"
+          />
         </Paper>
 
         <Grid container spacing={3}>

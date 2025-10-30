@@ -1,21 +1,12 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import {
-  ThemeProvider,
-  createTheme,
-  CssBaseline,
-} from '@mui/material';
-import { createProject } from './store/reducers/project';
+import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import LandingPage from './pages/LandingPage/LandingPage';
 import MultiRoomCalculator from './pages/MultiRoomCalculator/MultiRoomCalculator';
 import Materials from './pages/Materials/Materials';
 import History from './pages/History/History';
 
 function App() {
-  const dispatch = useDispatch();
-  const { currentProject } = useSelector((state) => state.project);
-
   // Create theme with #576861 primary, white secondary, and colorful accents
   const theme = createTheme({
     typography: {
@@ -89,8 +80,6 @@ function App() {
       },
     },
   });
-
-  // No need to create default project anymore - calculations work without a project
 
   return (
     <ThemeProvider theme={theme}>

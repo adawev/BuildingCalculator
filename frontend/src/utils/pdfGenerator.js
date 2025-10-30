@@ -1,8 +1,12 @@
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
+import logo from '../features/images/logo.png';
 
 export const generatePDF = (calculation) => {
   const doc = new jsPDF();
+
+  // Set default font to Helvetica (sans-serif)
+  doc.setFont('helvetica');
 
   // Colors
   const primaryColor = [102, 126, 234]; // #667eea
@@ -12,34 +16,39 @@ export const generatePDF = (calculation) => {
 
   // Header with gradient background
   doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, 210, 35, 'F');
+  doc.rect(0, 0, 210, 50, 'F');
+
+  // Add logo to PDF (centered at top, bigger size)
+  const img = new Image();
+  img.src = logo;
+  doc.addImage(img, 'PNG', 75, 5, 60, 30);
 
   // Title
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
-  doc.setFont(undefined, 'bold');
-  doc.text('Tyopliy Pol Kalkulyator', 105, 15, { align: 'center' });
+  doc.setFont('helvetica', 'bold');
+  doc.text('Tyopliy Pol Kalkulyator', 105, 38, { align: 'center' });
 
   doc.setFontSize(12);
-  doc.setFont(undefined, 'normal');
-  doc.text('Калькулятор теплых полов', 105, 23, { align: 'center' });
-  doc.text(new Date().toLocaleDateString('uz-UZ'), 105, 30, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+  doc.text('Калькулятор теплых полов', 105, 44, { align: 'center' });
+  doc.text(new Date().toLocaleDateString('uz-UZ'), 105, 48, { align: 'center' });
 
   // Reset text color
   doc.setTextColor(...darkGray);
 
   // Project Info Box
-  let yPos = 45;
+  let yPos = 60;
   doc.setFillColor(...lightGray);
   doc.roundedRect(15, yPos, 180, 35, 3, 3, 'F');
 
   doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text('Xona ma\'lumotlari / Информация о комнате', 20, yPos + 8);
 
   yPos += 15;
   doc.setFontSize(11);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(`Xona: ${calculation.roomName || 'N/A'}`, 20, yPos);
   yPos += 7;
   doc.text(`O'lchamlari / Размеры: ${calculation.roomLength} × ${calculation.roomWidth} m`, 20, yPos);
@@ -55,35 +64,35 @@ export const generatePDF = (calculation) => {
   doc.roundedRect(15, yPos, 180, 40, 3, 3, 'FD');
 
   doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
   doc.text('Hisoblash natijalari / Результаты расчета', 20, yPos + 8);
 
   doc.setTextColor(...darkGray);
   yPos += 18;
   doc.setFontSize(10);
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
 
   // Two columns for results
   doc.text(`Shlanka uzunligi / Длина трубы:`, 20, yPos);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`${calculation.pipeLengthWithReserve} m`, 90, yPos);
 
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(`Halqalar soni / Количество петель:`, 120, yPos);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`${calculation.numberOfLoops}`, 175, yPos);
 
   yPos += 8;
-  doc.setFont(undefined, 'normal');
+  doc.setFont('helvetica', 'normal');
   doc.text(`Quvvat / Мощность:`, 20, yPos);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.text(`${calculation.heatOutput} W`, 90, yPos);
 
   // Materials Table
   yPos += 20;
   doc.setFontSize(14);
-  doc.setFont(undefined, 'bold');
+  doc.setFont('helvetica', 'bold');
   doc.setTextColor(...primaryColor);
   doc.text('Kerakli materiallar / Необходимые материалы', 20, yPos);
 
@@ -138,7 +147,7 @@ export const generatePDF = (calculation) => {
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(14);
-    doc.setFont(undefined, 'bold');
+    doc.setFont('helvetica', 'bold');
     doc.text('Jami narx / Общая стоимость:', 20, yPos + 10);
     doc.text(`${calculation.totalCost?.toFixed(0) || '0'} so'm`, 175, yPos + 10, { align: 'right' });
   }
@@ -146,7 +155,7 @@ export const generatePDF = (calculation) => {
   // Footer
   doc.setTextColor(...textGray);
   doc.setFontSize(8);
-  doc.setFont(undefined, 'italic');
+  doc.setFont('helvetica', 'italic');
   const footerY = doc.internal.pageSize.height - 15;
   doc.text('Tyopliy Pol Kalkulyator - Professional Heating Calculator', 105, footerY, { align: 'center' });
   doc.text(`Yaratilgan / Создано: ${new Date().toLocaleString('uz-UZ')}`, 105, footerY + 5, { align: 'center' });

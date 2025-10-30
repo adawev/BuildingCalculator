@@ -9,10 +9,8 @@ import {
   CardContent,
   CardActionArea,
 } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
 import ApartmentIcon from '@mui/icons-material/Apartment';
 import BuildIcon from '@mui/icons-material/Build';
-import HistoryIcon from '@mui/icons-material/History';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import logo from '../../features/images/logo.png';
 
@@ -48,7 +46,7 @@ const LandingPage = () => {
       <Container maxWidth="lg">
         {/* Header */}
         <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <img src={logo} alt="Logo" style={{ height: '80px', marginBottom: '24px' }} />
+          <img src={logo} alt="Logo" style={{ height: '150px', marginBottom: '24px' }} />
           <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 2 }}>
             Калькулятор теплого пола
           </Typography>

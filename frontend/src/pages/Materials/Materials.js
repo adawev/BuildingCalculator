@@ -150,7 +150,7 @@ const Materials = () => {
       <Container maxWidth="lg">
         {/* Header */}
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <img src={logo} alt="Logo" style={{ height: '50px', marginRight: '16px' }} />
+          <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
           <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
             Управление материалами
           </Typography>
