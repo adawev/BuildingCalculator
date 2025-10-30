@@ -40,7 +40,7 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import logo from '../../features/images/logo.png';
 
-const API_URL = 'http://localhost:8080/api';
+const API_URL = 'https://api.ustabek.uz/api';
 
 const MultiRoomCalculator = () => {
   const navigate = useNavigate();
