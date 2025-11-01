@@ -42,23 +42,45 @@ const LandingPage = () => {
   ];
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 6 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 3, sm: 6 } }}>
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <img src={logo} alt="Logo" style={{ height: '150px', marginBottom: '24px' }} />
-          <Typography variant="h3" sx={{ fontWeight: 700, color: 'primary.main', mb: 2 }}>
+        <Box sx={{ textAlign: 'center', mb: { xs: 4, sm: 6 } }}>
+          <img
+            src={logo}
+            alt="Logo"
+            style={{
+              height: window.innerWidth < 600 ? '100px' : '150px',
+              marginBottom: '24px'
+            }}
+          />
+          <Typography
+            variant="h3"
+            sx={{
+              fontWeight: 700,
+              color: 'primary.main',
+              mb: 2,
+              fontSize: { xs: '1.75rem', sm: '2.5rem', md: '3rem' }
+            }}
+          >
             Калькулятор теплого пола
           </Typography>
-          <Typography variant="h6" color="text.secondary">
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{
+              fontSize: { xs: '1rem', sm: '1.25rem' },
+              px: { xs: 2, sm: 0 }
+            }}
+          >
             Рассчитайте необходимые материалы для системы подогрева пола
           </Typography>
         </Box>
 
         {/* Menu Cards */}
-        <Grid container spacing={4}>
+        <Grid container spacing={{ xs: 2, sm: 3, md: 4 }}>
           {menuItems.map((item, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
+            <Grid item xs={12} sm={6} md={4} key={index}>
               <Card
                 sx={{
                   height: '100%',
@@ -71,16 +93,34 @@ const LandingPage = () => {
               >
                 <CardActionArea
                   onClick={() => navigate(item.path)}
-                  sx={{ height: '100%', p: 4 }}
+                  sx={{
+                    height: '100%',
+                    p: { xs: 3, sm: 4 }
+                  }}
                 >
-                  <CardContent sx={{ textAlign: 'center' }}>
+                  <CardContent sx={{ textAlign: 'center', p: 0 }}>
                     <Box sx={{ color: item.color, mb: 2 }}>
-                      {item.icon}
+                      {React.cloneElement(item.icon, {
+                        sx: { fontSize: { xs: 50, sm: 60 } }
+                      })}
                     </Box>
-                    <Typography variant="h5" sx={{ fontWeight: 600, mb: 2 }}>
+                    <Typography
+                      variant="h5"
+                      sx={{
+                        fontWeight: 600,
+                        mb: 2,
+                        fontSize: { xs: '1.25rem', sm: '1.5rem' }
+                      }}
+                    >
                       {item.title}
                     </Typography>
-                    <Typography variant="body1" color="text.secondary">
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      sx={{
+                        fontSize: { xs: '0.875rem', sm: '1rem' }
+                      }}
+                    >
                       {item.description}
                     </Typography>
                   </CardContent>

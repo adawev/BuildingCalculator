@@ -1,3 +1,9 @@
+/* Mobile-first reset */
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* Remove arrows from number inputs */
 input[type='number']::-webkit-inner-spin-button,
 input[type='number']::-webkit-outer-spin-button {
@@ -9,19 +15,26 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
-/* Better input styling */
+/* Better input styling - responsive */
 .MuiTextField-root input {
   font-size: 1rem;
   padding: 14px 16px;
+}
+
+@media (max-width: 600px) {
+  .MuiTextField-root input {
+    font-size: 0.875rem;
+    padding: 10px 12px;
+  }
 }
 
 .MuiInputLabel-root {
   font-size: 1rem;
 }
 
-/* Smooth transitions */
+/* Smooth transitions - but not for transforms to improve performance */
 * {
-  transition: all 0.2s ease-in-out;
+  transition: color 0.2s ease-in-out, background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
 /* Body styling */
@@ -32,6 +45,47 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Touch-friendly buttons and links */
+button, a {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Improve mobile scrolling performance */
+* {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Better table scrolling on mobile */
+.MuiTableContainer-root {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Disable text selection on buttons and icons for better mobile UX */
+.MuiButton-root,
+.MuiIconButton-root,
+.MuiChip-root {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Mobile-friendly focus states */
+@media (max-width: 600px) {
+  .MuiButton-root {
+    min-height: 44px; /* iOS recommended minimum touch target */
+  }
+
+  .MuiIconButton-root {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 code {

@@ -59,81 +59,162 @@ const ProjectRow = ({ project, calculations, onDelete, onDownloadPdf, onEdit }) 
   return (
     <>
       <TableRow hover>
-        <TableCell>
+        <TableCell sx={{ p: { xs: 0.5, sm: 2 } }}>
           <IconButton size="small" onClick={() => setOpen(!open)}>
             {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
           </IconButton>
         </TableCell>
-        <TableCell sx={{ fontWeight: 600 }}>{project.name}</TableCell>
-        <TableCell>{roomCount} комнат</TableCell>
-        <TableCell>{totalArea.toFixed(2)} м²</TableCell>
-        <TableCell>
+        <TableCell sx={{
+          fontWeight: 600,
+          fontSize: { xs: '0.75rem', sm: '0.875rem' },
+          p: { xs: 1, sm: 2 }
+        }}>
+          {project.name}
+        </TableCell>
+        <TableCell sx={{
+          display: { xs: 'none', sm: 'table-cell' },
+          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+        }}>
+          {roomCount} комнат
+        </TableCell>
+        <TableCell sx={{
+          display: { xs: 'none', md: 'table-cell' },
+          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+        }}>
+          {totalArea.toFixed(2)} м²
+        </TableCell>
+        <TableCell sx={{ p: { xs: 1, sm: 2 } }}>
           <Chip
-            label={calculatedRooms === roomCount ? 'Завершено' : `${calculatedRooms}/${roomCount}`}
+            label={calculatedRooms === roomCount ? 'Готово' : `${calculatedRooms}/${roomCount}`}
             color={calculatedRooms === roomCount ? 'success' : 'warning'}
             size="small"
+            sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
           />
         </TableCell>
-        <TableCell>{formatDate(project.createdAt)}</TableCell>
-        <TableCell align="right">
+        <TableCell sx={{
+          display: { xs: 'none', lg: 'table-cell' },
+          fontSize: { xs: '0.75rem', sm: '0.875rem' }
+        }}>
+          {formatDate(project.createdAt)}
+        </TableCell>
+        <TableCell align="right" sx={{ p: { xs: 0.5, sm: 2 } }}>
           <IconButton
             size="small"
             color="primary"
             onClick={() => onDownloadPdf(project.id)}
             disabled={calculatedRooms === 0}
             title="Скачать PDF"
+            sx={{ p: { xs: 0.5, sm: 1 } }}
           >
-            <PictureAsPdfIcon fontSize="small" />
+            <PictureAsPdfIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
           </IconButton>
           <IconButton
             size="small"
             color="info"
             onClick={() => onEdit(project)}
             title="Изменить название"
+            sx={{ p: { xs: 0.5, sm: 1 }, display: { xs: 'none', sm: 'inline-flex' } }}
           >
-            <EditIcon fontSize="small" />
+            <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
           </IconButton>
           <IconButton
             size="small"
             color="error"
             onClick={() => onDelete(project)}
             title="Удалить проект"
+            sx={{ p: { xs: 0.5, sm: 1 } }}
           >
-            <DeleteIcon fontSize="small" />
+            <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
           </IconButton>
         </TableCell>
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={7}>
           <Collapse in={open} timeout="auto" unmountOnExit>
-            <Box sx={{ margin: 2 }}>
-              <Typography variant="h6" gutterBottom component="div">
+            <Box sx={{ margin: { xs: 1, sm: 2 } }}>
+              <Typography
+                variant="h6"
+                gutterBottom
+                component="div"
+                sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}
+              >
                 Комнаты ({roomCount})
               </Typography>
               <Table size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600 }}>Комната</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Размеры</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Площадь</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Труба</TableCell>
-                    <TableCell sx={{ fontWeight: 600 }}>Материалы</TableCell>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                    }}>
+                      Комната
+                    </TableCell>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                      display: { xs: 'none', sm: 'table-cell' }
+                    }}>
+                      Размеры
+                    </TableCell>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                    }}>
+                      Площадь
+                    </TableCell>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '0.7rem', sm: '0.875rem' },
+                      display: { xs: 'none', md: 'table-cell' }
+                    }}>
+                      Труба
+                    </TableCell>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                    }}>
+                      Статус
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {calculations.map((calc) => (
                     <TableRow key={calc.id}>
-                      <TableCell sx={{ fontWeight: 500 }}>{calc.roomName}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{
+                        fontWeight: 500,
+                        fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                      }}>
+                        {calc.roomName}
+                      </TableCell>
+                      <TableCell sx={{
+                        display: { xs: 'none', sm: 'table-cell' },
+                        fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                      }}>
                         {calc.roomLength} × {calc.roomWidth} м
                       </TableCell>
-                      <TableCell>{calc.roomArea?.toFixed(2)} м²</TableCell>
-                      <TableCell>{calc.pipeLength?.toFixed(2)} м</TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
+                        {calc.roomArea?.toFixed(2)} м²
+                      </TableCell>
+                      <TableCell sx={{
+                        display: { xs: 'none', md: 'table-cell' },
+                        fontSize: { xs: '0.7rem', sm: '0.875rem' }
+                      }}>
+                        {calc.pipeLength?.toFixed(2)} м
+                      </TableCell>
                       <TableCell>
                         {calc.materialItems?.length > 0 ? (
-                          <Chip label="Рассчитано" color="success" size="small" />
+                          <Chip
+                            label="Готово"
+                            color="success"
+                            size="small"
+                            sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                          />
                         ) : (
-                          <Chip label="Не рассчитано" size="small" />
+                          <Chip
+                            label="Нет"
+                            size="small"
+                            sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                          />
                         )}
                       </TableCell>
                     </TableRow>
@@ -290,30 +371,61 @@ const History = () => {
     .filter((calc) => calc.materialItems?.length > 0).length;
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 2, sm: 4 } }}>
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
-            История расчетов
-          </Typography>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'stretch', sm: 'center' },
+          mb: { xs: 2, sm: 4 },
+          gap: { xs: 1.5, sm: 0 }
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: { xs: 'center', sm: 'flex-start' },
+            mb: { xs: 1, sm: 0 }
+          }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: window.innerWidth < 600 ? '50px' : '60px',
+                marginRight: '16px'
+              }}
+            />
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'primary.main',
+                flexGrow: 1,
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
+              История расчетов
+            </Typography>
+          </Box>
           <Button
             variant="outlined"
             startIcon={<ArrowBackIcon />}
             onClick={() => navigate('/')}
+            size="small"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
           >
             Назад
           </Button>
         </Box>
 
         {/* Search */}
-        <Paper sx={{ p: 2, mb: 3 }}>
+        <Paper sx={{ p: { xs: 1.5, sm: 2 }, mb: { xs: 2, sm: 3 } }}>
           <TextField
             fullWidth
             placeholder="Поиск по проекту или комнате..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            size="small"
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -321,40 +433,78 @@ const History = () => {
                 </InputAdornment>
               ),
             }}
+            sx={{
+              '& .MuiInputBase-input': {
+                fontSize: { xs: '0.875rem', sm: '1rem' }
+              }
+            }}
           />
         </Paper>
 
         {/* Statistics */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-          <Paper sx={{ p: 2, flex: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' },
+          gap: { xs: 1.5, sm: 2 },
+          mb: { xs: 2, sm: 3 }
+        }}>
+          <Paper sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
               Проектов
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'primary.main',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+              }}
+            >
               {projects.length}
             </Typography>
           </Paper>
-          <Paper sx={{ p: 2, flex: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+          <Paper sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
               Всего комнат
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'info.main',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+              }}
+            >
               {totalCalculations}
             </Typography>
           </Paper>
-          <Paper sx={{ p: 2, flex: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+          <Paper sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
               Рассчитано
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'success.main',
+                fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' }
+              }}
+            >
               {totalCalculatedRooms}
             </Typography>
           </Paper>
-          <Paper sx={{ p: 2, flex: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+          <Paper sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' } }}>
               Общая площадь
             </Typography>
-            <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'warning.main',
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
               {totalArea.toFixed(2)} м²
             </Typography>
           </Paper>
@@ -368,27 +518,66 @@ const History = () => {
             </Box>
           ) : (
             <>
-              <TableContainer sx={{ maxHeight: 600 }}>
-                <Table stickyHeader>
+              <TableContainer sx={{ maxHeight: 600, overflowX: 'auto' }}>
+                <Table stickyHeader size="small">
                   <TableHead>
                     <TableRow>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white', width: 50 }} />
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        width: { xs: 40, sm: 50 },
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }} />
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
                         Проект
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        display: { xs: 'none', sm: 'table-cell' }
+                      }}>
                         Комнаты
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        display: { xs: 'none', md: 'table-cell' }
+                      }}>
                         Площадь
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
                         Статус
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        display: { xs: 'none', lg: 'table-cell' }
+                      }}>
                         Дата
                       </TableCell>
-                      <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }} align="right">
+                      <TableCell sx={{
+                        fontWeight: 600,
+                        bgcolor: 'primary.main',
+                        color: 'white',
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }} align="right">
                         Действия
                       </TableCell>
                     </TableRow>
