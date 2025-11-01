@@ -5,6 +5,7 @@ import LandingPage from './pages/LandingPage/LandingPage';
 import MultiRoomCalculator from './pages/MultiRoomCalculator/MultiRoomCalculator';
 import Materials from './pages/Materials/Materials';
 import History from './pages/History/History';
+import NotFound from './pages/NotFound/NotFound';
 
 function App() {
   // Create theme with #576861 primary, white secondary, and colorful accents
@@ -90,6 +91,7 @@ function App() {
           <Route path="/multi-room" element={<MultiRoomCalculator />} />
           <Route path="/materials" element={<Materials />} />
           <Route path="/history" element={<History />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </ThemeProvider>

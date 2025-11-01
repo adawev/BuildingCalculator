@@ -23,7 +23,7 @@ public class MaterialController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<MaterialResponse> getMaterial(@PathVariable Long id) {
+    public ResponseEntity<MaterialResponse> getMaterial(@PathVariable("id") Long id) {
         return ResponseEntity.ok(materialService.getMaterial(id));
     }
 
@@ -33,12 +33,12 @@ public class MaterialController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<MaterialResponse> updateMaterial(@PathVariable Long id, @RequestBody MaterialRequest request) {
+    public ResponseEntity<MaterialResponse> updateMaterial(@PathVariable("id") Long id, @RequestBody MaterialRequest request) {
         return ResponseEntity.ok(materialService.updateMaterial(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMaterial(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteMaterial(@PathVariable("id") Long id) {
         materialService.deleteMaterial(id);
         return ResponseEntity.noContent().build();
     }

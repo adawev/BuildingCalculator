@@ -1,6 +1,18 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import {
+  getAllProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
+  getProjectSummary,
+  downloadProjectPdf,
+  getCalculationsByProject,
+  createCalculation,
+  updateCalculation,
+  deleteCalculation,
+} from '../../services';
 import {
   Container,
   Box,
@@ -40,8 +52,6 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import logo from '../../features/images/logo.png';
 
-const API_URL = 'https://api.ustabek.uz/api';
-
 const MultiRoomCalculator = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -66,8 +76,7 @@ const MultiRoomCalculator = () => {
   useEffect(() => {
     const fetchNextProjectNumber = async () => {
       try {
-        const response = await axios.get(`${API_URL}/projects`);
-        const projects = response.data;
+        const projects = await getAllProjects();
         // Find the highest project number
         let maxNumber = 0;
         projects.forEach(project => {
@@ -109,21 +118,21 @@ const MultiRoomCalculator = () => {
       setLoading(true);
 
       // Get project details
-      const projectResp = await axios.get(`${API_URL}/projects/${pId}`);
-      setProjectName(projectResp.data.name);
+      const project = await getProjectById(pId);
+      setProjectName(project.name);
       setProjectId(pId);
 
       // Get all calculations for this project
-      const calcsResp = await axios.get(`${API_URL}/calculations/project/${pId}`);
-      setRooms(calcsResp.data);
+      const calculations = await getCalculationsByProject(pId);
+      setRooms(calculations);
 
       // Load summary
       loadSummaryDebounced(pId);
 
-      showNotification('Project yuklandi!', 'success');
+      showNotification('Проект загружен!', 'success');
     } catch (error) {
       console.error('Error loading project:', error);
-      showNotification('Project yuklashda xatolik', 'error');
+      showNotification('Ошибка при загрузке проекта', 'error');
     } finally {
       setLoading(false);
     }
@@ -136,8 +145,8 @@ const MultiRoomCalculator = () => {
     }
     summaryTimeoutRef.current = setTimeout(async () => {
       try {
-        const summaryResp = await axios.get(`${API_URL}/projects/${pId}/summary`);
-        setSummary(summaryResp.data);
+        const summary = await getProjectSummary(pId);
+        setSummary(summary);
       } catch (error) {
         console.error('Error loading summary:', error);
       }
@@ -152,15 +161,15 @@ const MultiRoomCalculator = () => {
         // Create project if not exists
         let pId = projectId;
         if (!pId) {
-          const projectResp = await axios.post(`${API_URL}/projects`, {
+          const project = await createProject({
             name: projectName,
           });
-          pId = projectResp.data.id;
+          pId = project.id;
           setProjectId(pId);
         }
 
         // Add calculation WITHOUT materials (calculatePrice: false)
-        const calcResp = await axios.post(`${API_URL}/calculations`, {
+        const calculation = await createCalculation({
           roomName: currentRoom.name,
           roomLength: parseFloat(currentRoom.length),
           roomWidth: parseFloat(currentRoom.width),
@@ -170,12 +179,12 @@ const MultiRoomCalculator = () => {
 
         // Add room to local state
         const roomBasicInfo = {
-          id: calcResp.data.id,
-          roomName: calcResp.data.roomName,
-          roomLength: calcResp.data.roomLength,
-          roomWidth: calcResp.data.roomWidth,
-          roomArea: calcResp.data.roomArea,
-          pipeLengthWithReserve: calcResp.data.pipeLengthWithReserve,
+          id: calculation.id,
+          roomName: calculation.roomName,
+          roomLength: calculation.roomLength,
+          roomWidth: calculation.roomWidth,
+          roomArea: calculation.roomArea,
+          pipeLengthWithReserve: calculation.pipeLengthWithReserve,
         };
         setRooms([...rooms, roomBasicInfo]);
         setCurrentRoom({ name: '', length: '', width: '' });
@@ -197,7 +206,7 @@ const MultiRoomCalculator = () => {
 
       // Update each calculation with calculatePrice: true
       for (const room of rooms) {
-        await axios.put(`${API_URL}/calculations/${room.id}`, {
+        await updateCalculation(room.id, {
           roomName: room.roomName,
           roomLength: room.roomLength,
           roomWidth: room.roomWidth,
@@ -218,16 +227,14 @@ const MultiRoomCalculator = () => {
 
   const handleDownloadPdf = async () => {
     if (!projectId) {
-      showNotification('Avval xonalarni hisoblang', 'warning');
+      showNotification('Сначала рассчитайте комнаты', 'warning');
       return;
     }
 
     try {
-      const response = await axios.get(`${API_URL}/projects/${projectId}/summary/pdf`, {
-        responseType: 'blob',
-      });
+      const blob = await downloadProjectPdf(projectId);
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `${projectName}_summary.pdf`);
@@ -236,10 +243,10 @@ const MultiRoomCalculator = () => {
       link.remove();
       window.URL.revokeObjectURL(url);
 
-      showNotification('PDF muvaffaqiyatli yuklandi!', 'success');
+      showNotification('PDF успешно загружен!', 'success');
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      showNotification('PDF yuklashda xatolik', 'error');
+      showNotification('Ошибка при загрузке PDF', 'error');
     }
   };
 
@@ -247,14 +254,14 @@ const MultiRoomCalculator = () => {
     if (!projectId || !projectName.trim()) return;
 
     try {
-      await axios.put(`${API_URL}/projects/${projectId}`, {
+      await updateProject(projectId, {
         name: projectName,
         status: 'DRAFT',
       });
-      showNotification('Project nomi o\'zgartirildi!', 'success');
+      showNotification('Название проекта изменено!', 'success');
     } catch (error) {
       console.error('Error updating project name:', error);
-      showNotification('Project nomini o\'zgartirishda xatolik', 'error');
+      showNotification('Ошибка при изменении названия', 'error');
     }
   };
 
@@ -262,9 +269,9 @@ const MultiRoomCalculator = () => {
     if (!projectId) return;
 
     try {
-      await axios.delete(`${API_URL}/projects/${projectId}`);
+      await deleteProject(projectId);
       setDeleteProjectDialog(false);
-      showNotification('Project o\'chirildi!', 'success');
+      showNotification('Проект удален!', 'success');
       // Reset state
       setProjectId(null);
       setRooms([]);
@@ -272,8 +279,7 @@ const MultiRoomCalculator = () => {
 
       // Fetch next project number
       try {
-        const response = await axios.get(`${API_URL}/projects`);
-        const projects = response.data;
+        const projects = await getAllProjects();
         let maxNumber = 0;
         projects.forEach(project => {
           const match = project.name.match(/Проект #(\d+)/);
@@ -290,7 +296,7 @@ const MultiRoomCalculator = () => {
       }
     } catch (error) {
       console.error('Error deleting project:', error);
-      showNotification('Project o\'chirishda xatolik', 'error');
+      showNotification('Ошибка при удалении проекта', 'error');
     }
   };
 
@@ -309,7 +315,7 @@ const MultiRoomCalculator = () => {
       const updatedRoom = editDialog.room;
 
       // Update calculation (without recalculating materials)
-      const calcResp = await axios.put(`${API_URL}/calculations/${updatedRoom.id}`, {
+      const calculation = await updateCalculation(updatedRoom.id, {
         roomName: updatedRoom.roomName,
         roomLength: parseFloat(updatedRoom.roomLength),
         roomWidth: parseFloat(updatedRoom.roomWidth),
@@ -320,12 +326,12 @@ const MultiRoomCalculator = () => {
       const updatedRooms = rooms.map((r) =>
         r.id === updatedRoom.id
           ? {
-              id: calcResp.data.id,
-              roomName: calcResp.data.roomName,
-              roomLength: calcResp.data.roomLength,
-              roomWidth: calcResp.data.roomWidth,
-              roomArea: calcResp.data.roomArea,
-              pipeLengthWithReserve: calcResp.data.pipeLengthWithReserve,
+              id: calculation.id,
+              roomName: calculation.roomName,
+              roomLength: calculation.roomLength,
+              roomWidth: calculation.roomWidth,
+              roomArea: calculation.roomArea,
+              pipeLengthWithReserve: calculation.pipeLengthWithReserve,
             }
           : r
       );
@@ -346,7 +352,7 @@ const MultiRoomCalculator = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/calculations/${deleteDialog.roomId}`);
+      await deleteCalculation(deleteDialog.roomId);
       setRooms(rooms.filter((r) => r.id !== deleteDialog.roomId));
       setDeleteDialog({ open: false, roomId: null, roomName: '' });
       if (projectId) {
@@ -361,51 +367,102 @@ const MultiRoomCalculator = () => {
 
   const loadSummary = async (pId) => {
     try {
-      const summaryResp = await axios.get(`${API_URL}/projects/${pId}/summary`);
-      setSummary(summaryResp.data);
+      const summary = await getProjectSummary(pId);
+      setSummary(summary);
     } catch (error) {
       console.error('Error loading summary:', error);
     }
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 2, sm: 4 } }}>
       <Container maxWidth="lg">
         {/* Header with logo */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4, gap: 2 }}>
-          <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
-            Расчет для всего дома
-          </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PictureAsPdfIcon />}
-            onClick={handleDownloadPdf}
-            disabled={!summary || summary.totalMaterials?.length === 0}
-          >
-            PDF
-          </Button>
-          <Button
-            variant="contained"
-            color="error"
-            startIcon={<DeleteIcon />}
-            onClick={() => setDeleteProjectDialog(true)}
-            disabled={!projectId}
-          >
-            O'chirish
-          </Button>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: { xs: 2, sm: 4 },
+          gap: { xs: 2, sm: 2 }
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+          }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: window.innerWidth < 600 ? '50px' : '60px',
+                marginRight: '16px'
+              }}
+            />
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'primary.main',
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
+              Расчет для всего дома
+            </Typography>
+          </Box>
+          <Box sx={{
+            display: 'flex',
+            gap: 1,
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+            width: { xs: '100%', sm: 'auto' },
+          }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              size="small"
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                flex: { xs: 1, sm: 'none' },
+                minWidth: { xs: 'auto', sm: '100px' }
+              }}
+            >
+              Назад
+            </Button>
+            <Button
+              variant="contained"
+              color="primary"
+              startIcon={<PictureAsPdfIcon />}
+              onClick={handleDownloadPdf}
+              disabled={!summary || summary.totalMaterials?.length === 0}
+              size="small"
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                flex: { xs: 1, sm: 'none' },
+                minWidth: { xs: 'auto', sm: '100px' }
+              }}
+            >
+              PDF
+            </Button>
+            <Button
+              variant="contained"
+              color="error"
+              startIcon={<DeleteIcon />}
+              onClick={() => setDeleteProjectDialog(true)}
+              disabled={!projectId}
+              size="small"
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                flex: { xs: 1, sm: 'none' },
+                minWidth: { xs: 'auto', sm: '120px' }
+              }}
+            >
+              Удалить
+            </Button>
+          </Box>
         </Box>
 
         {/* Project Name */}
-        <Paper sx={{ p: 3, mb: 3 }}>
+        <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
           <TextField
             fullWidth
             label="Название проекта"
@@ -413,14 +470,26 @@ const MultiRoomCalculator = () => {
             onChange={(e) => setProjectName(e.target.value)}
             onBlur={handleUpdateProjectName}
             variant="outlined"
+            size="small"
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
         </Paper>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={{ xs: 2, sm: 3 }}>
           {/* Left Column - Add Room Form */}
           <Grid item xs={12} md={4}>
-            <Paper sx={{ p: 3, mb: 3 }}>
-              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.main' }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 }, mb: { xs: 2, sm: 3 } }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: { xs: 2, sm: 3 },
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  fontSize: { xs: '1.125rem', sm: '1.25rem' }
+                }}
+              >
                 Добавить комнату
               </Typography>
 
@@ -430,7 +499,11 @@ const MultiRoomCalculator = () => {
                 value={currentRoom.name}
                 onChange={(e) => setCurrentRoom({ ...currentRoom, name: e.target.value })}
                 sx={{ mb: 2 }}
-                placeholder="Например: Гостиная"
+                size="small"
+                variant="outlined"
+                InputLabelProps={{
+                  shrink: true,
+                }}
               />
 
               <Grid container spacing={2} sx={{ mb: 2 }}>
@@ -442,6 +515,11 @@ const MultiRoomCalculator = () => {
                     value={currentRoom.length}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, length: e.target.value })}
                     inputProps={{ min: 0.1, step: 0.1 }}
+                    size="small"
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -452,6 +530,11 @@ const MultiRoomCalculator = () => {
                     value={currentRoom.width}
                     onChange={(e) => setCurrentRoom({ ...currentRoom, width: e.target.value })}
                     inputProps={{ min: 0.1, step: 0.1 }}
+                    size="small"
+                    variant="outlined"
+                    InputLabelProps={{
+                      shrink: true,
+                    }}
                   />
                 </Grid>
               </Grid>
@@ -475,8 +558,16 @@ const MultiRoomCalculator = () => {
             </Paper>
 
             {/* Room List below Add Form */}
-            <Paper sx={{ p: 3 }}>
-              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+            <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography
+                variant="h6"
+                sx={{
+                  mb: 2,
+                  fontWeight: 600,
+                  color: 'primary.main',
+                  fontSize: { xs: '1.125rem', sm: '1.25rem' }
+                }}
+              >
                 Добавленные комнаты ({rooms.length})
               </Typography>
 
@@ -553,20 +644,28 @@ const MultiRoomCalculator = () => {
           {/* Right Column - Materials or Calculate Button */}
           <Grid item xs={12} md={8}>
             {summary && summary.totalMaterials && summary.totalMaterials.length > 0 ? (
-              <Paper sx={{ p: 3 }}>
-                <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: 'primary.main' }}>
+              <Paper sx={{ p: { xs: 2, sm: 3 } }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    mb: { xs: 2, sm: 3 },
+                    fontWeight: 600,
+                    color: 'primary.main',
+                    fontSize: { xs: '1.125rem', sm: '1.25rem' }
+                  }}
+                >
                   Необходимые материалы
                 </Typography>
 
                 {/* Key Metrics */}
-                <Grid container spacing={2} sx={{ mb: 3 }}>
+                <Grid container spacing={{ xs: 1, sm: 2 }} sx={{ mb: { xs: 2, sm: 3 } }}>
                   <Grid item xs={6} sm={3}>
                     <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-                      <CardContent sx={{ py: 2 }}>
-                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                      <CardContent sx={{ py: { xs: 1, sm: 2 }, px: { xs: 1.5, sm: 2 } }}>
+                        <Typography variant="caption" sx={{ opacity: 0.9, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                           Комнат
                         </Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                           {summary.roomCount}
                         </Typography>
                       </CardContent>
@@ -574,37 +673,37 @@ const MultiRoomCalculator = () => {
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Card sx={{ bgcolor: 'success.main', color: 'white' }}>
-                      <CardContent sx={{ py: 2 }}>
-                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                      <CardContent sx={{ py: { xs: 1, sm: 2 }, px: { xs: 1.5, sm: 2 } }}>
+                        <Typography variant="caption" sx={{ opacity: 0.9, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                           Площадь
                         </Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                           {summary.totalArea.toFixed(0)}
                         </Typography>
-                        <Typography variant="caption">м²</Typography>
+                        <Typography variant="caption" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>м²</Typography>
                       </CardContent>
                     </Card>
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Card sx={{ bgcolor: 'info.main', color: 'white' }}>
-                      <CardContent sx={{ py: 2 }}>
-                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                      <CardContent sx={{ py: { xs: 1, sm: 2 }, px: { xs: 1.5, sm: 2 } }}>
+                        <Typography variant="caption" sx={{ opacity: 0.9, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                           Труба
                         </Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                           {summary.totalPipeLength.toFixed(0)}
                         </Typography>
-                        <Typography variant="caption">м</Typography>
+                        <Typography variant="caption" sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>м</Typography>
                       </CardContent>
                     </Card>
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Card sx={{ bgcolor: 'warning.main', color: 'white' }}>
-                      <CardContent sx={{ py: 2 }}>
-                        <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                      <CardContent sx={{ py: { xs: 1, sm: 2 }, px: { xs: 1.5, sm: 2 } }}>
+                        <Typography variant="caption" sx={{ opacity: 0.9, fontSize: { xs: '0.65rem', sm: '0.75rem' } }}>
                           Контуров
                         </Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <Typography variant="h5" sx={{ fontWeight: 700, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
                           {Math.ceil(summary.totalPipeLength / 32)}
                         </Typography>
                       </CardContent>
@@ -613,13 +712,19 @@ const MultiRoomCalculator = () => {
                 </Grid>
 
                 {/* Materials Table */}
-                <TableContainer>
+                <TableContainer sx={{ overflowX: 'auto' }}>
                   <Table size="small">
                     <TableHead>
                       <TableRow sx={{ bgcolor: 'primary.main' }}>
-                        <TableCell sx={{ color: 'white', fontWeight: 600 }}>Материал</TableCell>
-                        <TableCell align="right" sx={{ color: 'white', fontWeight: 600 }}>Количество</TableCell>
-                        <TableCell align="right" sx={{ color: 'white', fontWeight: 600 }}>Ед.</TableCell>
+                        <TableCell sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          Материал
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          Кол-во
+                        </TableCell>
+                        <TableCell align="right" sx={{ color: 'white', fontWeight: 600, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                          Ед.
+                        </TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -631,11 +736,13 @@ const MultiRoomCalculator = () => {
                             '&:hover': { bgcolor: 'action.selected' },
                           }}
                         >
-                          <TableCell sx={{ fontWeight: 500 }}>{material.materialName}</TableCell>
-                          <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main' }}>
+                          <TableCell sx={{ fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                            {material.materialName}
+                          </TableCell>
+                          <TableCell align="right" sx={{ fontWeight: 600, color: 'primary.main', fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
                             {material.quantity.toFixed(2)}
                           </TableCell>
-                          <TableCell align="right" sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                          <TableCell align="right" sx={{ fontSize: { xs: '0.7rem', sm: '0.875rem' }, color: 'text.secondary' }}>
                             {material.unit}
                           </TableCell>
                         </TableRow>
@@ -645,12 +752,12 @@ const MultiRoomCalculator = () => {
                 </TableContainer>
               </Paper>
             ) : (
-              <Paper sx={{ p: 6, textAlign: 'center', color: 'text.secondary' }}>
-                <CalculateIcon sx={{ fontSize: 80, mb: 2, opacity: 0.2 }} />
-                <Typography variant="h6" sx={{ mb: 1 }}>
+              <Paper sx={{ p: { xs: 3, sm: 6 }, textAlign: 'center', color: 'text.secondary' }}>
+                <CalculateIcon sx={{ fontSize: { xs: 60, sm: 80 }, mb: 2, opacity: 0.2 }} />
+                <Typography variant="h6" sx={{ mb: 1, fontSize: { xs: '1.125rem', sm: '1.25rem' } }}>
                   {rooms.length > 0 ? 'Нажмите "Рассчитать"' : 'Добавьте комнаты'}
                 </Typography>
-                <Typography variant="body2" sx={{ mb: 3 }}>
+                <Typography variant="body2" sx={{ mb: 3, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
                   {rooms.length > 0
                     ? 'Чтобы рассчитать необходимые материалы для всех комнат'
                     : 'Начните добавлять комнаты слева для расчета материалов'}
@@ -662,7 +769,11 @@ const MultiRoomCalculator = () => {
                     startIcon={calculating ? <CircularProgress size={20} color="inherit" /> : <CalculateIcon />}
                     onClick={handleCalculateAll}
                     disabled={calculating}
-                    sx={{ py: 2, px: 6 }}
+                    sx={{
+                      py: { xs: 1.5, sm: 2 },
+                      px: { xs: 4, sm: 6 },
+                      fontSize: { xs: '0.875rem', sm: '1rem' }
+                    }}
                   >
                     {calculating ? 'Расчет...' : 'Рассчитать материалы'}
                   </Button>
@@ -699,6 +810,7 @@ const MultiRoomCalculator = () => {
                 value={editDialog.room?.roomName || ''}
                 onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomName: e.target.value } })}
                 sx={{ mb: 2 }}
+                InputLabelProps={{ shrink: true }}
               />
               <Grid container spacing={2}>
                 <Grid item xs={6}>
@@ -709,6 +821,7 @@ const MultiRoomCalculator = () => {
                     value={editDialog.room?.roomLength || ''}
                     onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomLength: e.target.value } })}
                     inputProps={{ min: 0.1, step: 0.1 }}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -719,6 +832,7 @@ const MultiRoomCalculator = () => {
                     value={editDialog.room?.roomWidth || ''}
                     onChange={(e) => setEditDialog({ ...editDialog, room: { ...editDialog.room, roomWidth: e.target.value } })}
                     inputProps={{ min: 0.1, step: 0.1 }}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
               </Grid>
@@ -789,7 +903,7 @@ const MultiRoomCalculator = () => {
           open={notification.open}
           autoHideDuration={4000}
           onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
           <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
             {notification.message}

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import {
+  getAllMaterials,
+  createMaterial,
+  updateMaterial,
+  deleteMaterial,
+} from '../../services';
 import {
   Container,
   Box,
@@ -33,8 +38,6 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import logo from '../../features/images/logo.png';
 
-const API_URL = 'https://api.ustabek.uz/api';
-
 const Materials = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState([]);
@@ -56,8 +59,8 @@ const Materials = () => {
   const loadMaterials = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/materials`);
-      setMaterials(response.data);
+      const materials = await getAllMaterials();
+      setMaterials(materials);
     } catch (error) {
       console.error('Error loading materials:', error);
       showNotification('Ошибка при загрузке материалов', 'error');
@@ -101,10 +104,10 @@ const Materials = () => {
   const handleSave = async () => {
     try {
       if (dialog.mode === 'add') {
-        await axios.post(`${API_URL}/materials`, formData);
+        await createMaterial(formData);
         showNotification('Материал добавлен успешно!', 'success');
       } else if (dialog.mode === 'edit') {
-        await axios.put(`${API_URL}/materials/${dialog.material.id}`, formData);
+        await updateMaterial(dialog.material.id, formData);
         showNotification('Материал обновлен успешно!', 'success');
       }
       handleCloseDialog();
@@ -121,7 +124,7 @@ const Materials = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/materials/${deleteDialog.materialId}`);
+      await deleteMaterial(deleteDialog.materialId);
       setDeleteDialog({ open: false, materialId: null, materialName: '' });
       showNotification('Материал удален успешно!', 'success');
       loadMaterials();
@@ -133,7 +136,7 @@ const Materials = () => {
 
   const handleToggleAvailability = async (material) => {
     try {
-      await axios.put(`${API_URL}/materials/${material.id}`, {
+      await updateMaterial(material.id, {
         ...material,
         isAvailable: !material.isAvailable,
       });
@@ -146,30 +149,64 @@ const Materials = () => {
   };
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: 4 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default', py: { xs: 2, sm: 4 } }}>
       <Container maxWidth="lg">
         {/* Header */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 4 }}>
-          <img src={logo} alt="Logo" style={{ height: '60px', marginRight: '16px' }} />
-          <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', flexGrow: 1 }}>
-            Управление материалами
-          </Typography>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
-            sx={{ mr: 2 }}
-          >
-            Назад
-          </Button>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog('add')}
-            sx={{ px: 3 }}
-          >
-            Добавить материал
-          </Button>
+        <Box sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
+          mb: { xs: 2, sm: 4 },
+          gap: { xs: 2, sm: 2 }
+        }}>
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1
+          }}>
+            <img
+              src={logo}
+              alt="Logo"
+              style={{
+                height: window.innerWidth < 600 ? '50px' : '60px',
+                marginRight: '16px'
+              }}
+            />
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                color: 'primary.main',
+                fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.125rem' }
+              }}
+            >
+              Управление материалами
+            </Typography>
+          </Box>
+          <Box sx={{
+            display: 'flex',
+            gap: 1,
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              size="small"
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            >
+              Назад
+            </Button>
+            <Button
+              variant="contained"
+              startIcon={<AddIcon />}
+              onClick={() => handleOpenDialog('add')}
+              size="small"
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            >
+              Добавить
+            </Button>
+          </Box>
         </Box>
 
         {/* Materials Table */}
@@ -179,23 +216,50 @@ const Materials = () => {
               <CircularProgress />
             </Box>
           ) : (
-            <TableContainer sx={{ maxHeight: 600 }}>
-              <Table stickyHeader>
+            <TableContainer sx={{ maxHeight: 600, overflowX: 'auto' }}>
+              <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
-                    <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                    }}>
                       Название
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      display: { xs: 'none', sm: 'table-cell' }
+                    }}>
                       Тип
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                    }}>
                       Единица
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }}>
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                      display: { xs: 'none', md: 'table-cell' }
+                    }}>
                       Статус
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 600, bgcolor: 'primary.main', color: 'white' }} align="right">
+                    <TableCell sx={{
+                      fontWeight: 600,
+                      bgcolor: 'primary.main',
+                      color: 'white',
+                      fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                    }} align="right">
                       Действия
                     </TableCell>
                   </TableRow>
@@ -203,21 +267,35 @@ const Materials = () => {
                 <TableBody>
                   {materials.map((material) => (
                     <TableRow key={material.id} hover>
-                      <TableCell sx={{ fontWeight: 500 }}>{material.name}</TableCell>
-                      <TableCell>
-                        <Chip label={material.type} size="small" variant="outlined" />
+                      <TableCell sx={{
+                        fontWeight: 500,
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                      }}>
+                        {material.name}
                       </TableCell>
-                      <TableCell>{material.unit}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ display: { xs: 'none', sm: 'table-cell' } }}>
+                        <Chip
+                          label={material.type}
+                          size="small"
+                          variant="outlined"
+                          sx={{ fontSize: { xs: '0.65rem', sm: '0.75rem' } }}
+                        />
+                      </TableCell>
+                      <TableCell sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
+                        {material.unit}
+                      </TableCell>
+                      <TableCell sx={{ display: { xs: 'none', md: 'table-cell' } }}>
                         <FormControlLabel
                           control={
                             <Switch
                               checked={material.isAvailable}
                               onChange={() => handleToggleAvailability(material)}
                               color="success"
+                              size="small"
                             />
                           }
                           label={material.isAvailable ? 'Активен' : 'Неактивен'}
+                          sx={{ '& .MuiFormControlLabel-label': { fontSize: '0.875rem' } }}
                         />
                       </TableCell>
                       <TableCell align="right">
@@ -225,16 +303,16 @@ const Materials = () => {
                           size="small"
                           color="primary"
                           onClick={() => handleOpenDialog('edit', material)}
-                          sx={{ mr: 1 }}
+                          sx={{ mr: 0.5 }}
                         >
-                          <EditIcon fontSize="small" />
+                          <EditIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                         </IconButton>
                         <IconButton
                           size="small"
                           color="error"
                           onClick={() => handleDelete(material)}
                         >
-                          <DeleteIcon fontSize="small" />
+                          <DeleteIcon sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }} />
                         </IconButton>
                       </TableCell>
                     </TableRow>
@@ -268,6 +346,7 @@ const Materials = () => {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -280,6 +359,7 @@ const Materials = () => {
                   required
                   disabled={dialog.mode === 'edit'}
                   helperText="Тип нельзя изменить после создания"
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -290,6 +370,7 @@ const Materials = () => {
                   onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
                   placeholder="м, шт, кг, м²"
                   required
+                  InputLabelProps={{ shrink: true }}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -349,7 +430,7 @@ const Materials = () => {
           open={notification.open}
           autoHideDuration={4000}
           onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
           <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
             {notification.message}

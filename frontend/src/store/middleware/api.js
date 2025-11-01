@@ -1,6 +1,10 @@
-import axios from 'axios';
+import apiClient from '../../config/api';
 import { apiCallSuccess, apiCallError } from '../api';
 
+/**
+ * Redux Middleware for API calls
+ * Uses centralized API config from /config/api.js
+ */
 const api =
   ({ dispatch }) =>
   (next) =>
@@ -9,22 +13,13 @@ const api =
 
     const { url, method, data, onSuccess, onError } = action.payload;
 
-    const API_BASE_URL = 'https://api.ustabek.uz/api';
-
     try {
-      const token = localStorage.getItem('token');
-
-      const config = {
+      // Use centralized apiClient which already has base URL and auth
+      const response = await apiClient({
         method,
-        url: API_BASE_URL + url,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
+        url, // No need to add base URL, apiClient has it
         ...(data && { data }),
-      };
-
-      const response = await axios(config);
+      });
 
       if (onSuccess) {
         const successAction = onSuccess(response.data);
