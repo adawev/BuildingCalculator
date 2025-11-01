@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import {
+  getAllProjects,
+  deleteProject,
+  downloadProjectPdf,
+  getCalculationsByProject,
+} from '../../services';
 import {
   Container,
   Box,
@@ -35,8 +40,6 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import EditIcon from '@mui/icons-material/Edit';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import logo from '../../features/images/logo.png';
-
-const API_URL = 'https://api.ustabek.uz/api';
 
 const ProjectRow = ({ project, calculations, onDelete, onDownloadPdf, onEdit }) => {
   const [open, setOpen] = useState(false);
@@ -261,14 +264,13 @@ const History = () => {
     try {
       setLoading(true);
       // Get all projects
-      const projectsResponse = await axios.get(`${API_URL}/projects`);
-      const projectsData = projectsResponse.data;
+      const projectsData = await getAllProjects();
 
       // Get calculations for all projects
       const calculationsMap = {};
       for (const project of projectsData) {
-        const calcResponse = await axios.get(`${API_URL}/calculations/project/${project.id}`);
-        calculationsMap[project.id] = calcResponse.data;
+        const calculations = await getCalculationsByProject(project.id);
+        calculationsMap[project.id] = calculations;
       }
 
       // Sort projects by date descending (newest first)
@@ -316,7 +318,7 @@ const History = () => {
 
   const confirmDelete = async () => {
     try {
-      await axios.delete(`${API_URL}/projects/${deleteDialog.project.id}`);
+      await deleteProject(deleteDialog.project.id);
       setDeleteDialog({ open: false, project: null });
       showNotification('Проект удален успешно!', 'success');
       loadHistory();
@@ -328,11 +330,9 @@ const History = () => {
 
   const handleDownloadPdf = async (projectId) => {
     try {
-      const response = await axios.get(`${API_URL}/projects/${projectId}/summary/pdf`, {
-        responseType: 'blob',
-      });
+      const blob = await downloadProjectPdf(projectId);
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const url = window.URL.createObjectURL(new Blob([blob]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `project_${projectId}_summary.pdf`);
@@ -377,15 +377,14 @@ const History = () => {
         <Box sx={{
           display: 'flex',
           flexDirection: { xs: 'column', sm: 'row' },
-          alignItems: { xs: 'stretch', sm: 'center' },
+          alignItems: { xs: 'flex-start', sm: 'center' },
           mb: { xs: 2, sm: 4 },
-          gap: { xs: 1.5, sm: 0 }
+          gap: { xs: 2, sm: 2 }
         }}>
           <Box sx={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: { xs: 'center', sm: 'flex-start' },
-            mb: { xs: 1, sm: 0 }
+            flex: 1
           }}>
             <img
               src={logo}
@@ -400,22 +399,27 @@ const History = () => {
               sx={{
                 fontWeight: 700,
                 color: 'primary.main',
-                flexGrow: 1,
                 fontSize: { xs: '1.25rem', sm: '1.75rem', md: '2.125rem' }
               }}
             >
               История расчетов
             </Typography>
           </Box>
-          <Button
-            variant="outlined"
-            startIcon={<ArrowBackIcon />}
-            onClick={() => navigate('/')}
-            size="small"
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
-          >
-            Назад
-          </Button>
+          <Box sx={{
+            display: 'flex',
+            gap: 1,
+            width: { xs: '100%', sm: 'auto' }
+          }}>
+            <Button
+              variant="outlined"
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/')}
+              size="small"
+              sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            >
+              Назад
+            </Button>
+          </Box>
         </Box>
 
         {/* Search */}
@@ -433,6 +437,7 @@ const History = () => {
                 </InputAdornment>
               ),
             }}
+            InputLabelProps={{ shrink: true }}
             sx={{
               '& .MuiInputBase-input': {
                 fontSize: { xs: '0.875rem', sm: '1rem' }
@@ -652,7 +657,7 @@ const History = () => {
           open={notification.open}
           autoHideDuration={4000}
           onClose={handleCloseNotification}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
         >
           <Alert onClose={handleCloseNotification} severity={notification.severity} sx={{ width: '100%' }}>
             {notification.message}

@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-// Base API URL - can be changed based on environment
-export const API_BASE_URL = 'https://api.ustabek.uz/api';
+/**
+ * CENTRALIZED API CONFIGURATION
+ * Single source of truth for all API calls in the application
+ */
 
-// Create axios instance with default config
+// Base API URL - Change this for different environments
+export const API_BASE_URL = 'http://localhost:8888/api';
+
+// Create axios instance with default configuration
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -12,14 +17,13 @@ const apiClient = axios.create({
   timeout: 30000, // 30 seconds timeout
 });
 
-// Request interceptor for adding auth tokens if needed in future
+// Request interceptor - Adds auth token to all requests
 apiClient.interceptors.request.use(
   (config) => {
-    // You can add auth tokens here in the future
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -27,7 +31,7 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor for global error handling
+// Response interceptor - Global error handling
 apiClient.interceptors.response.use(
   (response) => {
     return response;
