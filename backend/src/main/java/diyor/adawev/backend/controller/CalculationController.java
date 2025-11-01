@@ -21,22 +21,22 @@ public class CalculationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<CalculationResponse> getCalculation(@PathVariable Long id) {
+    public ResponseEntity<CalculationResponse> getCalculation(@PathVariable("id") Long id) {
         return ResponseEntity.ok(calculationService.getCalculation(id));
     }
 
     @GetMapping("/project/{projectId}")
-    public ResponseEntity<List<CalculationResponse>> getCalculationsByProject(@PathVariable Long projectId) {
+    public ResponseEntity<List<CalculationResponse>> getCalculationsByProject(@PathVariable("projectId") Long projectId) {
         return ResponseEntity.ok(calculationService.getCalculationsByProject(projectId));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<CalculationResponse> updateCalculation(@PathVariable Long id, @RequestBody CalculationRequest request) {
+    public ResponseEntity<CalculationResponse> updateCalculation(@PathVariable("id") Long id, @RequestBody CalculationRequest request) {
         return ResponseEntity.ok(calculationService.updateCalculation(id, request));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCalculation(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCalculation(@PathVariable("id") Long id) {
         calculationService.deleteCalculation(id);
         return ResponseEntity.noContent().build();
     }

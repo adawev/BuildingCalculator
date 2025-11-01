@@ -26,12 +26,12 @@ public class ProjectController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ProjectResponse> updateProject(@PathVariable Long id, @RequestBody ProjectRequest request) {
+    public ResponseEntity<ProjectResponse> updateProject(@PathVariable("id") Long id, @RequestBody ProjectRequest request) {
         return ResponseEntity.ok(projectService.updateProject(id, request));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ProjectResponse> getProject(@PathVariable Long id) {
+    public ResponseEntity<ProjectResponse> getProject(@PathVariable("id") Long id) {
         return ResponseEntity.ok(projectService.getProject(id));
     }
 
@@ -41,18 +41,18 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteProject(@PathVariable("id") Long id) {
         projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/summary")
-    public ResponseEntity<ProjectSummaryResponse> getProjectSummary(@PathVariable Long id) {
+    public ResponseEntity<ProjectSummaryResponse> getProjectSummary(@PathVariable("id") Long id) {
         return ResponseEntity.ok(projectService.getProjectSummary(id));
     }
 
     @GetMapping("/{id}/summary/pdf")
-    public ResponseEntity<byte[]> getProjectSummaryPdf(@PathVariable Long id) throws IOException {
+    public ResponseEntity<byte[]> getProjectSummaryPdf(@PathVariable("id") Long id) throws IOException {
         byte[] pdfBytes = pdfService.generateProjectSummaryPdf(id);
 
         HttpHeaders headers = new HttpHeaders();
